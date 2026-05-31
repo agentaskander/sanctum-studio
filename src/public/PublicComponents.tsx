@@ -1,4 +1,5 @@
 import { methodSteps, sanctuaries, type PublicPage } from './siteContent'
+import { OriginalStudioRoomVisual } from './originalVisuals'
 
 export function SeoHead(page: PublicPage) {
   document.title = page.title
@@ -187,7 +188,7 @@ function Hero(props: {
             <a class="secondary-link" href="${props.secondary[1]}">${props.secondary[0]}</a>
           </div>
         </div>
-        ${PublicDiagram(props.diagram, 'hero-visual')}
+        ${OriginalStudioRoomVisual('hero-visual')}
       </div>
     </header>
   `
@@ -279,39 +280,8 @@ function CollectionItemsSection(page: PublicPage) {
   `
 }
 
-export function PublicDiagram(kind: PublicPage['diagram'], className = '') {
-  const labels = diagramLabels[kind]
-  return `
-    <section class="diagram-wrap ${className}" aria-label="${labels.title}">
-      <div class="diagram-stack">
-        <svg viewBox="0 0 760 520" role="img">
-          <title>${labels.title}</title>
-          <defs>
-            <linearGradient id="studioGlow" x1="0" x2="1">
-              <stop offset="0%" stop-color="#f0d6a7"></stop>
-              <stop offset="100%" stop-color="#96c7bb"></stop>
-            </linearGradient>
-          </defs>
-          <rect class="stage" x="70" y="58" width="620" height="404" rx="34"></rect>
-          ${labels.items.map((item, index) => {
-            const x = 132 + (index % 4) * 166
-            const y = 146 + Math.floor(index / 4) * 150
-            return `<g><rect class="stack-node" x="${x - 58}" y="${y - 42}" width="116" height="84" rx="18"></rect><text class="node-label" x="${x}" y="${y + 5}">${item}</text></g>`
-          }).join('')}
-          <path class="flow-line" d="M132 380 C244 292 334 424 456 318 C548 238 612 260 650 156"></path>
-        </svg>
-      </div>
-    </section>
-  `
-}
-
-const diagramLabels = {
-  'focus-framework': { title: 'Focus Space Framework', items: ['Task', 'Quiet', 'Air', 'Desk', 'View', 'Reset', 'Boundary'] },
-  'room-stack': { title: 'Room Optimization Stack', items: ['Light', 'Sound', 'Air', 'Temp', 'Material', 'Nature', 'Ritual'] },
-  'sleep-factors': { title: 'Sleep Environment Factors', items: ['Dark', 'Quiet', 'Cool', 'Air', 'Soft', 'Ritual', 'Wake'] },
-  'recovery-framework': { title: 'Recovery Space Framework', items: ['Privacy', 'Low Light', 'Texture', 'Sound', 'Air', 'Return', 'Still'] },
-  'nature-ladder': { title: 'Nature Exposure Ladder', items: ['Image', 'View', 'Plant', 'Material', 'Garden', 'Outside', 'Season'] },
-  'studio-method': { title: 'Studio Method', items: ['Observe', 'Tune', 'Layer', 'Stabilize', 'Refine'] },
+export function PublicDiagram(_kind: PublicPage['diagram'], className = '') {
+  return OriginalStudioRoomVisual(className)
 }
 
 function Schema(page: PublicPage) {

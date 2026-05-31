@@ -108,6 +108,33 @@ export const seoEntries: SeoEntry[] = [
   entry('ritual-design-brief', 'Ritual Design Brief', 'A Studio brief for designing routines into the room without making them visible clutter.', 'Room Rituals', 'Design teams', 'studio-briefs', 'studio-method'),
 ]
 
+export const seoSlugInventory = [
+  { slug: 'sleep-sanctuary-evening-descent' },
+  { slug: 'sleep-room-surface-reset' },
+  { slug: 'darkness-quiet-and-coolth-brief' },
+  { slug: 'focus-sanctuary-desk-orientation' },
+  { slug: 'home-office-acoustic-edge' },
+  { slug: 'cognitive-space-design-brief' },
+  { slug: 'recovery-room-low-contrast' },
+  { slug: 'soft-return-room-story' },
+  { slug: 'recovery-atmosphere-brief' },
+  { slug: 'creative-room-surface-rhythm' },
+  { slug: 'creative-reset-story' },
+  { slug: 'creative-sanctuary-brief' },
+  { slug: 'nature-room-living-reference' },
+  { slug: 'plant-view-and-material-story' },
+  { slug: 'nature-sanctuary-brief' },
+  { slug: 'light-design-layering-guide' },
+  { slug: 'glare-control-room-story' },
+  { slug: 'evening-warmth-brief' },
+  { slug: 'soundscape-design-for-quiet' },
+  { slug: 'quiet-focus-room-story' },
+  { slug: 'soundscape-implementation-brief' },
+  { slug: 'room-ritual-reset-guide' },
+  { slug: 'morning-and-evening-ritual-story' },
+  { slug: 'ritual-design-brief' },
+]
+
 const collectionLabels: Record<SeoEntry['collection'], string> = {
   articles: 'Articles',
   stories: 'Stories',
