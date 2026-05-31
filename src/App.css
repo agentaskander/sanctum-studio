@@ -777,3 +777,70 @@ dd,
 .footer {
   border-top: 1px solid rgba(83, 75, 58, 0.14);
 }
+
+/* Content surface audit: reduce sparse vertical space and make generated libraries dense. */
+.public-hero {
+  min-height: auto;
+  padding-bottom: clamp(42px, 7vw, 76px);
+}
+
+.hero-grid {
+  min-height: auto;
+  padding: clamp(54px, 8vw, 104px) 0 clamp(34px, 5vw, 70px);
+}
+
+.cinema-section {
+  padding: clamp(46px, 6vw, 86px) clamp(20px, 5vw, 82px);
+}
+
+.section-head {
+  margin-bottom: 22px;
+}
+
+.surface-card,
+.method-step {
+  min-height: 176px;
+  align-content: start;
+}
+
+.hero-visual,
+.hero-diagram,
+.original-studio-graph {
+  min-height: clamp(360px, 42vw, 500px);
+}
+
+.dense-link-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dense-link-grid .surface-card {
+  min-height: 168px;
+  padding: 20px;
+}
+
+.faq-section {
+  padding-top: clamp(36px, 5vw, 64px);
+}
+
+.faq-list details p {
+  max-width: 920px;
+  margin-bottom: 12px;
+}
+
+.faq-list details p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 1100px) {
+  .dense-link-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .dense-link-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,5 +1,6 @@
 import { methodSteps, sanctuaries, type PublicPage } from './siteContent'
 import { OriginalStudioRoomVisual } from './originalVisuals'
+import { seoEntries } from './seoLibrary'
 
 export function SeoHead(page: PublicPage) {
   document.title = page.title
@@ -69,9 +70,9 @@ function HomePage(page: PublicPage) {
           <h2>Design systems for clients, projects, and rooms that need a clearer method.</h2>
         </div>
         <div class="library-grid">
-          ${LinkPanel('Professional Frameworks', 'Studio-ready frameworks that translate sanctuary design into public-safe client work.', '/professional-frameworks', 'Bridge')}
+          ${LinkPanel('Professional Frameworks', 'Studio-ready frameworks that translate sanctuary design into client-ready design work.', '/professional-frameworks', 'Bridge')}
           ${LinkPanel('Room Archetypes', 'Sleep, focus, recovery, creative, and nature sanctuaries as premium room patterns.', '/room-archetypes', 'Archetypes')}
-          ${LinkPanel('Case Studies', 'Public-safe design narratives that show spatial transformation without private methods.', '/case-studies', 'Studies')}
+          ${LinkPanel('Case Studies', 'Public design narratives that show spatial transformation without private methods.', '/case-studies', 'Studies')}
         </div>
       </section>
       <section class="cinema-section library-section">
@@ -96,6 +97,32 @@ function HomePage(page: PublicPage) {
           ${LinkPanel('Investor Preview', 'A public category preview for strategic readers.', '/investor-preview', 'Preview')}
         </div>
       </section>
+      <section class="cinema-section library-section">
+        <div>
+          <p class="kicker">Sanctuary Guides</p>
+          <h2>Existing guide content, visible from the home page.</h2>
+        </div>
+        <div class="dense-link-grid">${seoEntries.filter((entry) => entry.collection === 'guides').map((entry) => LinkPanel(entry.title, entry.description, `/articles/${entry.slug}`, entry.category)).join('')}</div>
+      </section>
+      <section class="cinema-section library-section">
+        <div>
+          <p class="kicker">Room Stories</p>
+          <h2>Narratives for sleep, focus, recovery, creativity, nature, and ritual.</h2>
+        </div>
+        <div class="dense-link-grid">${seoEntries.filter((entry) => entry.collection === 'room-stories' || entry.collection === 'stories').map((entry) => LinkPanel(entry.title, entry.description, `/articles/${entry.slug}`, 'Room Story')).join('')}</div>
+      </section>
+      <section class="cinema-section library-section">
+        <div>
+          <p class="kicker">Studio Briefs</p>
+          <h2>Briefs for clients, partners, strategic readers, and room systems.</h2>
+        </div>
+        <div class="dense-link-grid">
+          ${seoEntries.filter((entry) => entry.collection === 'studio-briefs').map((entry) => LinkPanel(entry.title, entry.description, `/articles/${entry.slug}`, 'Studio Brief')).join('')}
+          ${LinkPanel('Partner Preview', 'A public preview for aligned design and operator conversations.', '/partner-preview', 'Partner Preview')}
+          ${LinkPanel('Investor Preview', 'A public category preview for strategic readers.', '/investor-preview', 'Investor Preview')}
+          ${LinkPanel('Room Archetypes', 'Sleep, focus, recovery, creative, and nature sanctuaries as premium room patterns.', '/room-archetypes', 'Archetypes')}
+        </div>
+      </section>
       ${CTA('Begin with one room.', page.cta, '/tools', 'Open Studio tools')}
       ${DisclaimerBlock()}
       ${Footer()}
@@ -115,6 +142,7 @@ function PillarPage(page: PublicPage) {
       diagram: page.diagram,
     })}
     <main>
+      ${page.seoCollectionItems?.length ? CollectionItemsSection(page) : ''}
       <section class="cinema-section split-section">
         <div>
           <p class="kicker">Studio Principle</p>
@@ -138,7 +166,7 @@ function PillarPage(page: PublicPage) {
       </section>
       ${DeepSeoSection(page)}
       ${SeoArticleSection(page)}
-      ${CollectionItemsSection(page)}
+      ${page.seoCollectionItems?.length ? '' : CollectionItemsSection(page)}
       ${ChecklistBlock(page.checklist)}
       <section id="related" class="cinema-section">
         <div class="section-head">
@@ -207,7 +235,7 @@ export function ChecklistBlock(items: string[]) {
 }
 
 export function FaqBlock(items: PublicPage['faqs']) {
-  return `<section class="cinema-section faq-section"><p class="kicker">FAQ</p><h2>Questions before changing the room.</h2><div class="faq-list">${items.map((item) => `<details open><summary>${item.question}</summary><p>${item.answer}</p></details>`).join('')}</div></section>`
+  return `<section class="cinema-section faq-section"><p class="kicker">FAQ</p><h2>Questions before changing the room.</h2><div class="faq-list">${items.map((item) => `<details open><summary>${item.question}</summary><p>${item.answer}</p><p>Why it matters: a room works better when the design starts with the state it should support, not with a shopping list or visual theme.</p><p>Practical example: observe the room at the time it matters most, then tune one layer such as light, sound, air, material, nature, or ritual before adding more.</p><p>Related reading: continue with <a href="/guides">Studio guides</a>, <a href="/room-stories">room stories</a>, and <a href="/room-archetypes">room archetypes</a>.</p></details>`).join('')}</div></section>`
 }
 
 export function DisclaimerBlock() {
