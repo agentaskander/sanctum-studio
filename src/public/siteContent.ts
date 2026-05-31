@@ -23,6 +23,10 @@ export type PublicPage = {
   cta: string
   diagram: DiagramKind
   updated: string
+  seoBody?: string[]
+  seoCategory?: string
+  seoAudience?: string
+  seoDisclaimer?: string
 }
 
 const origin = 'https://sanctumstudio.io'
@@ -162,6 +166,18 @@ const pageDetails: Record<string, { label: string; principle: string; observe: s
     observe: ['The first layer to tune', 'The simplest durable change', 'How the room will be reset after use'],
     tune: ['Start with light, sound, air, or surface friction', 'Layer nature and ritual after the base is calmer', 'Refine the room after real use'],
   },
+  Stories: {
+    label: 'SEO Library',
+    principle: 'SANCTUM Studio stories show how rooms can shift through light, sound, air, material, nature, ritual, and calmer spatial rhythm.',
+    observe: ['The room state before intervention', 'The intended sanctuary archetype', 'The visible design layer being tuned'],
+    tune: ['Keep examples public-safe', 'Show design reasoning without private methods', 'Frame outcomes as lived usability, not medical claims'],
+  },
+  Articles: {
+    label: 'SEO Library',
+    principle: 'SANCTUM Studio articles build public design authority around sanctuary rooms, sleep spaces, focus spaces, recovery rooms, and environmental design.',
+    observe: ['Which room question readers are asking', 'Which public concept needs clearer language', 'Where examples can make the method concrete'],
+    tune: ['Use public design language', 'Keep the Studio method practical', 'Link articles into guides and tools'],
+  },
 }
 
 function page(path: string, title: string, description: string, h1: string, topic: string, diagram: DiagramKind): PublicPage {
@@ -216,4 +232,32 @@ export const pages: PublicPage[] = [
   page('/design-systems', 'Design Systems | SANCTUM Studio', 'SANCTUM Studio design systems for premium room implementation with clear public boundaries.', 'Design Systems', 'Design Systems', 'studio-method'),
   page('/case-studies', 'Case Studies | SANCTUM Studio', 'Public-safe case studies for sanctuary room design, environmental intelligence, and premium spatial transformation.', 'Case Studies', 'Case Studies', 'recovery-framework'),
   page('/implementation-guides', 'Implementation Guides | SANCTUM Studio', 'Implementation guides for tuning rooms through light, sound, air, material, nature, and ritual.', 'Implementation Guides', 'Implementation Guides', 'sleep-factors'),
+  page('/stories', 'Stories | SANCTUM Studio', 'Public SANCTUM Studio stories about sleep rooms, focus spaces, recovery rooms, nature contact, and sanctuary design.', 'Stories', 'Stories', 'recovery-framework'),
+  page('/articles', 'Articles | SANCTUM Studio', 'Articles on sanctuary design, sleep room design, focus spaces, recovery rooms, lighting, sound, air, and nature.', 'Articles', 'Articles', 'studio-method'),
 ]
+
+const betaSources = [
+  '/',
+  '/professional-frameworks',
+  '/room-archetypes',
+  '/assessments',
+  '/design-systems',
+  '/case-studies',
+  '/implementation-guides',
+]
+
+export const betaPages: PublicPage[] = betaSources.map((sourcePath) => {
+  const source = pages.find((item) => item.path === sourcePath) ?? pages[0]
+  const betaPath = sourcePath === '/' ? '/beta' : `/beta${sourcePath}`
+  return {
+    ...source,
+    path: betaPath,
+    canonical: `${origin}${betaPath}`,
+    title: `Beta Preview | ${source.title}`,
+    h1: sourcePath === '/' ? 'SANCTUM Studio Beta Preview' : `${source.h1} Beta Preview`,
+    label: 'Beta Preview',
+    description: `Public-preview beta route for ${source.h1}. ${source.description}`,
+    intro: `${source.intro} This beta route is a public-preview surface and contains no internal route links or private implementation logic.`,
+    cta: `Preview ${source.h1} in the SANCTUM Studio beta route namespace.`,
+  }
+})
