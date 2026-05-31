@@ -198,6 +198,7 @@ li {
 .sanctuary-grid,
 .library-grid,
 .method-grid,
+.knowledge-grid,
 .two-column {
   display: grid;
   gap: 16px;
@@ -219,9 +220,14 @@ li {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.knowledge-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .surface-card,
 .method-step,
 .list-panel,
+.knowledge-panel,
 .diagram-wrap,
 .cta,
 .disclaimer,
@@ -241,6 +247,14 @@ li {
   min-height: 260px;
   align-content: end;
   padding: 24px;
+}
+
+.knowledge-panel {
+  padding: clamp(24px, 4vw, 38px);
+}
+
+.knowledge-panel p {
+  font-size: 17px;
 }
 
 .surface-card span,
@@ -394,6 +408,7 @@ summary {
   .hero-grid,
   .split-section,
   .library-grid,
+  .knowledge-grid,
   .two-column {
     grid-template-columns: 1fr;
   }

@@ -4,6 +4,14 @@ export function SeoHead(page: PublicPage) {
   document.title = page.title
   setMeta('description', page.description)
   setMeta('robots', 'index,follow')
+  setMeta('twitter:card', 'summary_large_image')
+  setMeta('twitter:title', page.title)
+  setMeta('twitter:description', page.description)
+  setMetaProperty('og:type', page.path === '/' ? 'website' : 'article')
+  setMetaProperty('og:site_name', 'SANCTUM Studio')
+  setMetaProperty('og:title', page.title)
+  setMetaProperty('og:description', page.description)
+  setMetaProperty('og:url', page.canonical)
   setLink('canonical', page.canonical)
 }
 
@@ -94,6 +102,7 @@ function PillarPage(page: PublicPage) {
         ${ListPanel('What To Observe', page.observe)}
         ${ListPanel('What To Tune', page.tune)}
       </section>
+      ${DeepSeoSection(page)}
       ${ChecklistBlock(page.checklist)}
       <section id="related" class="cinema-section">
         <div class="section-head">
@@ -176,6 +185,34 @@ function Footer() {
   return '<footer class="footer"><div><strong>SANCTUM Studio</strong><span>Design implementation for sanctuary spaces.</span></div><a href="https://sanctumprotocol.org">SANCTUM Protocol is the public framework layer.</a></footer>'
 }
 
+function DeepSeoSection(page: PublicPage) {
+  return `
+    <section class="cinema-section knowledge-section">
+      <div class="section-head">
+        <p class="kicker">Definition And Design Context</p>
+        <h2>${page.h1} as premium sanctuary room design.</h2>
+      </div>
+      <div class="knowledge-grid">
+        <article class="knowledge-panel">
+          <h3>What It Means</h3>
+          <p>${page.h1} is a visible design system for shaping a room around a human state. SANCTUM Studio treats light, sound, air, temperature, materials, nature, and ritual as parts of one instrument, not separate purchases or isolated decor decisions.</p>
+          <p>The result is a room that feels intentional before it feels styled. A sleep room should descend. A focus space should clarify. A recovery room should soften. A creative room should invite movement without scattering attention. A nature room should reconnect the body with place.</p>
+        </article>
+        <article class="knowledge-panel">
+          <h3>How It Differs From Generic Room Advice</h3>
+          <p>Generic room advice usually starts with tips. SANCTUM starts with atmosphere. The Studio method asks what the room is amplifying, what it is muffling, what it interrupts, and which daily ritual it should make easier to repeat.</p>
+          <p>This keeps the work premium and practical. Instead of filling a room with themed objects, the design removes friction, tunes sensory conditions, layers materials with restraint, and stabilizes the room so its purpose can be felt every day.</p>
+        </article>
+        <article class="knowledge-panel">
+          <h3>How To Apply It</h3>
+          <p>Begin with one room and one state: sleep, focus, recovery, creativity, or calm. Observe the room at the time it matters most. Notice glare, noise, air, thermal comfort, clutter, material harshness, missing nature contact, and reset difficulty.</p>
+          <p>Then tune one layer. Change the light path, reduce sound reflection, clear the primary surface, introduce breathable order, add a living reference point, or simplify the ritual. Keep what makes the room easier to use, and remove what only adds visual weight.</p>
+        </article>
+      </div>
+    </section>
+  `
+}
+
 export function PublicDiagram(kind: PublicPage['diagram'], className = '') {
   const labels = diagramLabels[kind]
   return `
@@ -215,9 +252,9 @@ function Schema(page: PublicPage) {
   const json = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'Organization', name: 'SANCTUM Studio', url: 'https://sanctumstudio.com' },
-      { '@type': 'WebSite', name: 'SANCTUM Studio', url: 'https://sanctumstudio.com' },
-      { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: 'https://sanctumstudio.com/' }, { '@type': 'ListItem', position: 2, name: page.h1, item: page.canonical }] },
+      { '@type': 'Organization', name: 'SANCTUM Studio', url: 'https://sanctumstudio.io' },
+      { '@type': 'WebSite', name: 'SANCTUM Studio', url: 'https://sanctumstudio.io' },
+      { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: 'https://sanctumstudio.io/' }, { '@type': 'ListItem', position: 2, name: page.h1, item: page.canonical }] },
       { '@type': 'Article', headline: page.h1, description: page.description, dateModified: '2026-05-31' },
       { '@type': 'FAQPage', mainEntity: page.faqs.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })) },
       { '@type': 'HowTo', name: `Review ${page.h1}`, step: page.checklist.map((item) => ({ '@type': 'HowToStep', text: item })) },
@@ -231,6 +268,16 @@ function setMeta(name: string, content: string) {
   if (!tag) {
     tag = document.createElement('meta')
     tag.name = name
+    document.head.appendChild(tag)
+  }
+  tag.content = content
+}
+
+function setMetaProperty(property: string, content: string) {
+  let tag = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`)
+  if (!tag) {
+    tag = document.createElement('meta')
+    tag.setAttribute('property', property)
     document.head.appendChild(tag)
   }
   tag.content = content

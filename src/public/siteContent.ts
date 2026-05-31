@@ -25,7 +25,7 @@ export type PublicPage = {
   updated: string
 }
 
-const origin = 'https://sanctumstudio.com'
+const origin = 'https://sanctumstudio.io'
 const updated = 'May 31, 2026'
 
 export const sanctuaries = [
