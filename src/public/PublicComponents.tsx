@@ -73,6 +73,28 @@ function HomePage(page: PublicPage) {
           ${LinkPanel('Case Studies', 'Public-safe design narratives that show spatial transformation without private methods.', '/case-studies', 'Studies')}
         </div>
       </section>
+      <section class="cinema-section library-section">
+        <div>
+          <p class="kicker">Sanctuary Stories</p>
+          <h2>Public room stories for sleep, focus, recovery, creativity, nature, and daily ritual.</h2>
+        </div>
+        <div class="library-grid">
+          ${LinkPanel('Room Stories', 'Narratives that show how rooms shift through light, sound, air, material, and ritual.', '/room-stories', 'Stories')}
+          ${LinkPanel('Studio Field Guides', 'Practical public guides for tuning rooms one layer at a time.', '/guides', 'Guides')}
+          ${LinkPanel('Studio Briefs', 'Public briefs for partners, projects, and premium room systems.', '/studio-briefs', 'Briefs')}
+        </div>
+      </section>
+      <section class="cinema-section library-section">
+        <div>
+          <p class="kicker">Before / After Narrative</p>
+          <h2>Room archetypes become easier to act on when the story is clear.</h2>
+        </div>
+        <div class="library-grid">
+          ${LinkPanel('Room Archetypes', 'Sleep, focus, recovery, creative, and nature sanctuaries as premium room patterns.', '/room-archetypes', 'Archetypes')}
+          ${LinkPanel('Partner Preview', 'A public preview for aligned design and operator conversations.', '/partner-preview', 'Partner')}
+          ${LinkPanel('Investor Preview', 'A public category preview for strategic readers.', '/investor-preview', 'Preview')}
+        </div>
+      </section>
       ${CTA('Begin with one room.', page.cta, '/tools', 'Open Studio tools')}
       ${DisclaimerBlock()}
       ${Footer()}
@@ -115,6 +137,7 @@ function PillarPage(page: PublicPage) {
       </section>
       ${DeepSeoSection(page)}
       ${SeoArticleSection(page)}
+      ${CollectionItemsSection(page)}
       ${ChecklistBlock(page.checklist)}
       <section id="related" class="cinema-section">
         <div class="section-head">
@@ -242,6 +265,20 @@ function SeoArticleSection(page: PublicPage) {
   `
 }
 
+function CollectionItemsSection(page: PublicPage) {
+  if (!page.seoCollectionItems?.length) return ''
+
+  return `
+    <section class="cinema-section">
+      <div class="section-head">
+        <p class="kicker">Collection Index</p>
+        <h2>${page.h1} entries.</h2>
+      </div>
+      <div class="sanctuary-grid">${page.seoCollectionItems.map((item) => LinkPanel(item.label, item.text, item.href, 'Library Entry')).join('')}</div>
+    </section>
+  `
+}
+
 export function PublicDiagram(kind: PublicPage['diagram'], className = '') {
   const labels = diagramLabels[kind]
   return `
@@ -287,6 +324,10 @@ function Schema(page: PublicPage) {
       { '@type': 'Article', headline: page.h1, description: page.description, dateModified: '2026-05-31' },
       { '@type': 'FAQPage', mainEntity: page.faqs.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })) },
       { '@type': 'HowTo', name: `Review ${page.h1}`, step: page.checklist.map((item) => ({ '@type': 'HowToStep', text: item })) },
+      ...(page.seoCollectionItems ? [
+        { '@type': 'CollectionPage', name: page.h1, description: page.description, url: page.canonical },
+        { '@type': 'ItemList', name: `${page.h1} entries`, itemListElement: page.seoCollectionItems.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.label, url: `${page.canonical.replace(/\/[^/]*$/, '')}${item.href}` })) },
+      ] : []),
     ],
   }
   return `<script type="application/ld+json">${JSON.stringify(json)}</script>`

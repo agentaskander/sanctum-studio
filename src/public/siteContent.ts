@@ -27,6 +27,7 @@ export type PublicPage = {
   seoCategory?: string
   seoAudience?: string
   seoDisclaimer?: string
+  seoCollectionItems?: { label: string; href: string; text: string }[]
 }
 
 const origin = 'https://sanctumstudio.io'
