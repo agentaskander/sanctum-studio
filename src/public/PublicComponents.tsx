@@ -62,6 +62,17 @@ function HomePage(page: PublicPage) {
           ${LinkPanel('Nature And Grounding', 'A nature sanctuary built from views, plants, material warmth, outdoor thresholds, and ritual.', '/nature-and-grounding', 'Guide')}
         </div>
       </section>
+      <section class="cinema-section library-section">
+        <div>
+          <p class="kicker">Professional Layer</p>
+          <h2>Design systems for clients, projects, and rooms that need a clearer method.</h2>
+        </div>
+        <div class="library-grid">
+          ${LinkPanel('Professional Frameworks', 'Studio-ready frameworks that translate sanctuary design into public-safe client work.', '/professional-frameworks', 'Bridge')}
+          ${LinkPanel('Room Archetypes', 'Sleep, focus, recovery, creative, and nature sanctuaries as premium room patterns.', '/room-archetypes', 'Archetypes')}
+          ${LinkPanel('Case Studies', 'Public-safe design narratives that show spatial transformation without private methods.', '/case-studies', 'Studies')}
+        </div>
+      </section>
       ${CTA('Begin with one room.', page.cta, '/tools', 'Open Studio tools')}
       ${DisclaimerBlock()}
       ${Footer()}
@@ -136,6 +147,7 @@ function Hero(props: {
         <div>
           <a href="/sleep-room-design">Sanctuaries</a>
           <a href="/guides">Method</a>
+          <a href="/professional-frameworks">Professional</a>
           <a href="/guides">Guides</a>
           <a href="/tools">Tools</a>
           <a href="/about">About</a>

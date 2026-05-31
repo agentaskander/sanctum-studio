@@ -56,6 +56,15 @@ const studioLinks = [
   { label: 'Guides', href: '/guides', text: 'Premium design guides, not generic articles.' },
 ]
 
+const professionalLinks = [
+  { label: 'Professional Frameworks', href: '/professional-frameworks', text: 'Studio-ready frameworks for translating sanctuary design into client work.' },
+  { label: 'Room Archetypes', href: '/room-archetypes', text: 'Sleep, focus, recovery, creative, and nature sanctuary patterns.' },
+  { label: 'Assessments', href: '/assessments', text: 'Public-safe room reviews for light, sound, air, material, nature, and ritual.' },
+  { label: 'Design Systems', href: '/design-systems', text: 'Implementation systems for premium environmental design.' },
+  { label: 'Case Studies', href: '/case-studies', text: 'Public-safe project narratives for sanctuary rooms.' },
+  { label: 'Implementation Guides', href: '/implementation-guides', text: 'Stepwise design guides for tuning one room at a time.' },
+]
+
 const pageDetails: Record<string, { label: string; principle: string; observe: string[]; tune: string[] }> = {
   'SANCTUM Studio': {
     label: 'Design Studio',
@@ -117,6 +126,42 @@ const pageDetails: Record<string, { label: string; principle: string; observe: s
     observe: ['Which guide matches the room state', 'Where the room feels unresolved', 'What the first visible change should be'],
     tune: ['Start with the primary room', 'Follow the Studio method', 'Refine after use'],
   },
+  'Professional Frameworks': {
+    label: 'Professional Layer',
+    principle: 'Professional frameworks translate SANCTUM Studio language into client-ready room briefs while keeping internal SANCTUM implementation methods outside the public site.',
+    observe: ['The room state the client wants to support', 'The visible environmental layers shaping the room', 'The boundaries between design guidance and medical claims'],
+    tune: ['Use public-safe sanctuary language', 'Turn observations into design briefs', 'Keep the method elegant, practical, and non-proprietary'],
+  },
+  'Room Archetypes': {
+    label: 'Professional Layer',
+    principle: 'Room archetypes help designers identify the primary instrument: sleep sanctuary, focus sanctuary, recovery sanctuary, creative sanctuary, or nature sanctuary.',
+    observe: ['Which state the room should hold', 'Which sensory layer currently dominates', 'How the room transitions across the day'],
+    tune: ['Choose one archetype as the anchor', 'Align light, sound, air, temperature, materials, nature, and ritual', 'Remove elements that blur the room intent'],
+  },
+  Assessments: {
+    label: 'Professional Layer',
+    principle: 'Assessments are public-safe qualitative reviews of the room stack. They name visible friction without publishing internal evaluation machinery.',
+    observe: ['Glare, noise, stale air, thermal discomfort, hard materials, missing nature, and ritual friction', 'The maintenance burden of the room', 'The difference between styling and support'],
+    tune: ['Prioritize the most visible friction', 'Keep recommendations qualitative', 'Translate findings into one-room implementation steps'],
+  },
+  'Design Systems': {
+    label: 'Professional Layer',
+    principle: 'Design systems turn sanctuary intent into repeatable decisions: lighting families, acoustic layers, air practices, material restraint, nature placement, and reset rituals.',
+    observe: ['Which details need consistency', 'Which interventions are maintainable', 'Where the design should stay quiet'],
+    tune: ['Sequence the room stack', 'Build a small system before adding more', 'Keep every element accountable to the intended state'],
+  },
+  'Case Studies': {
+    label: 'Professional Layer',
+    principle: 'Case studies show how SANCTUM Studio can frame public-safe room transformation through design intent, observed friction, selected interventions, and lived usability.',
+    observe: ['The initial atmosphere of the room', 'The intervention sequence', 'The visible change in calm, clarity, recovery, or daily rhythm'],
+    tune: ['Show design reasoning without private methods', 'Avoid guaranteed outcomes', 'Keep the project narrative architectural and human-centered'],
+  },
+  'Implementation Guides': {
+    label: 'Professional Layer',
+    principle: 'Implementation guides help move from inspiration into practice: one room, one state, one stack, one maintainable sequence of changes.',
+    observe: ['The first layer to tune', 'The simplest durable change', 'How the room will be reset after use'],
+    tune: ['Start with light, sound, air, or surface friction', 'Layer nature and ritual after the base is calmer', 'Refine the room after real use'],
+  },
 }
 
 function page(path: string, title: string, description: string, h1: string, topic: string, diagram: DiagramKind): PublicPage {
@@ -148,7 +193,7 @@ function page(path: string, title: string, description: string, h1: string, topi
       { question: 'Do I need a renovation?', answer: 'No. Many rooms can be improved through light, sound, air, layout, material, nature, and repeatable ritual before construction is considered.' },
       { question: 'Where should I begin?', answer: 'Begin with one room and one state. Tune the environment like an instrument, then refine after use.' },
     ],
-    links: studioLinks.filter((link) => link.href !== path).slice(0, 6),
+    links: [...professionalLinks, ...studioLinks].filter((link) => link.href !== path).slice(0, 6),
     cta: `Begin with ${topic} and tune one room into a calmer, more intentional sanctuary.`,
   }
 }
@@ -165,4 +210,10 @@ export const pages: PublicPage[] = [
   page('/tools', 'Studio Tools | SANCTUM Studio', 'Public room review tools for tuning light, sound, air, material, nature, ritual, and room rhythm.', 'Studio Tools', 'Tools', 'studio-method'),
   page('/guides', 'Studio Guides | SANCTUM Studio', 'Premium SANCTUM design guides for sleep, focus, recovery, lighting, sound, air, and nature sanctuaries.', 'Studio Guides', 'Guides', 'nature-ladder'),
   page('/about', 'About | SANCTUM Studio', 'About SANCTUM Studio, a premium sanctuary design system for human-centered rooms.', 'About SANCTUM Studio', 'SANCTUM Studio', 'recovery-framework'),
+  page('/professional-frameworks', 'Professional Frameworks | SANCTUM Studio', 'Public-safe professional frameworks for sanctuary design, room assessment, design systems, and implementation guides.', 'Professional Frameworks', 'Professional Frameworks', 'studio-method'),
+  page('/room-archetypes', 'Room Archetypes | SANCTUM Studio', 'Premium room archetypes for sleep, focus, recovery, creative, and nature sanctuary design.', 'Room Archetypes', 'Room Archetypes', 'room-stack'),
+  page('/assessments', 'Assessments | SANCTUM Studio', 'Public-safe qualitative room assessments for light, sound, air, temperature, material, nature, and ritual.', 'Assessments', 'Assessments', 'focus-framework'),
+  page('/design-systems', 'Design Systems | SANCTUM Studio', 'SANCTUM Studio design systems for premium room implementation with clear public boundaries.', 'Design Systems', 'Design Systems', 'studio-method'),
+  page('/case-studies', 'Case Studies | SANCTUM Studio', 'Public-safe case studies for sanctuary room design, environmental intelligence, and premium spatial transformation.', 'Case Studies', 'Case Studies', 'recovery-framework'),
+  page('/implementation-guides', 'Implementation Guides | SANCTUM Studio', 'Implementation guides for tuning rooms through light, sound, air, material, nature, and ritual.', 'Implementation Guides', 'Implementation Guides', 'sleep-factors'),
 ]
