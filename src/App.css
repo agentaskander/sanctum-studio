@@ -617,6 +617,23 @@ details,
   color: #3b3429;
   font-size: 13px;
   font-weight: 720;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.original-studio-graph a.graph-node:hover,
+.original-studio-graph a.graph-node:focus-visible {
+  border-color: rgba(83, 75, 58, 0.34);
+  background: rgba(255, 252, 245, 0.96);
+  box-shadow: 0 18px 48px rgba(78, 61, 36, 0.18);
+  color: #1f271f;
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.original-studio-graph a.graph-node:focus-visible {
+  outline: 3px solid rgba(138, 115, 73, 0.35);
+  outline-offset: 4px;
 }
 
 .original-studio-graph .node-1 {
@@ -820,6 +837,44 @@ dd,
   padding: 20px;
 }
 
+.room-layer-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.room-layer-card {
+  gap: 14px;
+  min-height: 270px;
+  padding: 18px;
+}
+
+.room-layer-card dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.room-layer-card dt {
+  color: #8a7349;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.room-layer-card dd {
+  color: #53604f;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 3px 0 0;
+}
+
+.room-layer-card strong {
+  color: #283426;
+  font-size: 13px;
+}
+
 .faq-section {
   padding-top: clamp(36px, 5vw, 64px);
 }
@@ -834,12 +889,17 @@ dd,
 }
 
 @media (max-width: 1100px) {
+  .room-layer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dense-link-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 700px) {
+  .room-layer-grid,
   .dense-link-grid {
     grid-template-columns: 1fr;
   }

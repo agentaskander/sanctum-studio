@@ -1,6 +1,6 @@
 import { methodSteps, sanctuaries, type PublicPage } from './siteContent'
 import { OriginalStudioRoomVisual } from './originalVisuals'
-import { seoEntries } from './seoLibrary'
+import { seoEntries, studioGuideHubs } from './seoLibrary'
 
 export function SeoHead(page: PublicPage) {
   document.title = page.title
@@ -45,6 +45,13 @@ function HomePage(page: PublicPage) {
           <h2>Light, sound, air, temperature, materials, nature, and ritual tuned as one atmosphere.</h2>
         </div>
         ${PublicDiagram('room-stack', 'hero-diagram')}
+      </section>
+      <section class="cinema-section library-section">
+        <div>
+          <p class="kicker">Room Optimization Layers</p>
+          <h2>Each visual node opens a full Studio guide hub.</h2>
+        </div>
+        <div class="room-layer-grid">${studioGuideHubs.map((hub) => RoomLayerCard(hub)).join('')}</div>
       </section>
       <section id="method" class="cinema-section">
         <div class="section-head">
@@ -224,6 +231,21 @@ function Hero(props: {
 
 function LinkPanel(title: string, text: string, href: string, eyebrow: string) {
   return `<a class="surface-card link-panel" href="${href}"><span>${eyebrow}</span><h3>${title}</h3><p>${text}</p></a>`
+}
+
+function RoomLayerCard(hub: (typeof studioGuideHubs)[number]) {
+  return `
+    <a class="surface-card link-panel room-layer-card" href="/guides/${hub.slug}">
+      <span>Room Layer</span>
+      <h3>${hub.title.replace(' Guide', '')}</h3>
+      <p>${hub.definition}</p>
+      <dl>
+        <div><dt>Observe</dt><dd>${hub.examples[0]}</dd></div>
+        <div><dt>Tune</dt><dd>${hub.principles[0]}</dd></div>
+      </dl>
+      <strong>Open guide hub</strong>
+    </a>
+  `
 }
 
 function ListPanel(title: string, items: string[]) {

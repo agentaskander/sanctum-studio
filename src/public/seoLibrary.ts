@@ -15,6 +15,21 @@ export type SeoEntry = {
   diagram: DiagramKind
 }
 
+export type StudioGuideHub = {
+  slug: string
+  title: string
+  description: string
+  definition: string
+  whyItMatters: string
+  examples: string[]
+  principles: string[]
+  checklist: string[]
+  mistakes: string[]
+  relatedSanctuaries: string[]
+  relatedSlugs: string[]
+  diagram: DiagramKind
+}
+
 const origin = 'https://sanctumstudio.io'
 const updated = 'May 31, 2026'
 
@@ -106,6 +121,107 @@ export const seoEntries: SeoEntry[] = [
   entry('room-ritual-reset-guide', 'Room Ritual Reset Guide', 'A guide to repeatable rituals that make rooms easier to use and maintain.', 'Room Rituals', 'Homeowners', 'guides', 'studio-method'),
   entry('morning-and-evening-ritual-story', 'Morning And Evening Ritual Story', 'A room story about daily transitions, reset paths, and sensory cues.', 'Room Rituals', 'Homeowners and designers', 'stories', 'studio-method'),
   entry('ritual-design-brief', 'Ritual Design Brief', 'A Studio brief for designing routines into the room without making them visible clutter.', 'Room Rituals', 'Design teams', 'studio-briefs', 'studio-method'),
+]
+
+export const studioGuideHubs: StudioGuideHub[] = [
+  {
+    slug: 'light-design',
+    title: 'Light Design Guide',
+    description: 'A deep Studio guide to daylight, task light, evening warmth, glare control, and darkness as room design layers.',
+    definition: 'Light design is the way a room shapes brightness, contrast, timing, shadow, glare, task clarity, and evening descent.',
+    whyItMatters: 'Light is often the fastest room layer to feel. It can sharpen attention, flatten atmosphere, create fatigue, soften transition, or make a room easier to leave behind at night.',
+    examples: ['A bedroom with protected darkness and warmer evening lamps.', 'A home office with task light separated from screen glare.', 'A reading room where daylight is framed without visual strain.'],
+    principles: ['Separate daylight, task, ambient, and evening layers.', 'Reduce glare before increasing brightness.', 'Make the intended light state the easiest switch to use.', 'Protect darkness when the room is meant to descend.'],
+    checklist: ['Observe daylight at morning, afternoon, and evening.', 'Name the light state the room should support.', 'Identify glare, contrast, and over-bright fixtures.', 'Tune task light separately from ambient light.', 'Check whether evening light supports downshift.'],
+    mistakes: ['Using one overhead light for every state.', 'Adding bright fixtures before solving glare.', 'Ignoring darkness as part of design.', 'Choosing decorative lamps that do not support the room purpose.'],
+    relatedSanctuaries: ['Sleep Sanctuary', 'Focus Sanctuary', 'Recovery Sanctuary'],
+    relatedSlugs: ['light-design-layering-guide', 'glare-control-room-story', 'evening-warmth-brief'],
+    diagram: 'room-stack',
+  },
+  {
+    slug: 'soundscape-design',
+    title: 'Soundscape Design Guide',
+    description: 'A deep Studio guide to acoustic privacy, sound reflection, masking, quiet, and sound as atmosphere.',
+    definition: 'Soundscape design is the shaping of speech paths, reflection, vibration, masking, silence, and background atmosphere inside a room.',
+    whyItMatters: 'Sound determines whether a room feels exposed, protected, focused, or unsettled. It is a design layer, not only a technical problem.',
+    examples: ['A focus room with fewer speech paths and softer reflection.', 'A bedroom where mechanical hum and sudden noise are reduced.', 'A recovery corner where sound supports downshift instead of vigilance.'],
+    principles: ['Reduce hard reflection before adding sound systems.', 'Separate quiet needs from music preferences.', 'Use materials and layout to create acoustic privacy.', 'Treat silence as an active design condition.'],
+    checklist: ['Listen for speech intrusion and intermittent noise.', 'Find hard surfaces that amplify reflection.', 'Identify equipment hum or vibration.', 'Choose absorption, layout, masking, or distance as the first move.', 'Review the room at the time quiet matters most.'],
+    mistakes: ['Solving every sound issue with speakers.', 'Ignoring low-frequency vibration.', 'Adding soft goods without locating reflection paths.', 'Designing for silence when stable masking would work better.'],
+    relatedSanctuaries: ['Focus Sanctuary', 'Sleep Sanctuary', 'Recovery Sanctuary'],
+    relatedSlugs: ['soundscape-design-for-quiet', 'quiet-focus-room-story', 'soundscape-implementation-brief'],
+    diagram: 'focus-framework',
+  },
+  {
+    slug: 'air-quality-design',
+    title: 'Air Quality Design Guide',
+    description: 'A deep Studio guide to breathable rooms, airflow, filtration, humidity, source control, and maintenance rhythm.',
+    definition: 'Air quality design makes breath part of the room system through ventilation, filtration, humidity balance, source control, cleaning rhythm, and maintainable habits.',
+    whyItMatters: 'Air is invisible, but rooms feel different when freshness, source control, and maintenance are designed into daily use.',
+    examples: ['A bedroom with clearer airflow and reduced fragrance load.', 'A workspace with visible filter maintenance and less stale air.', 'A recovery room where cleaning products and material sources are simplified.'],
+    principles: ['Reduce sources before relying on devices.', 'Keep airflow paths visible and unobstructed.', 'Make filter and humidity maintenance easy to remember.', 'Treat scent as a design decision, not an afterthought.'],
+    checklist: ['Observe stale zones, dust, humidity, and odor.', 'Identify blocked vents or poor airflow paths.', 'Review cleaning, fragrance, and material sources.', 'Make maintenance visible and repeatable.', 'Pair air changes with room purpose and reset rhythm.'],
+    mistakes: ['Adding devices without source control.', 'Blocking airflow with furniture or storage.', 'Using scent to cover stale air.', 'Making maintenance too hidden to repeat.'],
+    relatedSanctuaries: ['Sleep Sanctuary', 'Recovery Sanctuary', 'Focus Sanctuary'],
+    relatedSlugs: ['sleep-sanctuary-evening-descent', 'recovery-room-low-contrast', 'focus-sanctuary-desk-orientation'],
+    diagram: 'room-stack',
+  },
+  {
+    slug: 'temperature-design',
+    title: 'Temperature Design Guide',
+    description: 'A deep Studio guide to thermal comfort, coolth, warmth, airflow, materials, bedding, seating, and room timing.',
+    definition: 'Temperature design is the way a room manages warmth, coolth, airflow, tactile temperature, seasonal shifts, and the thermal expectations of sleep, focus, recovery, or creative work.',
+    whyItMatters: 'Thermal discomfort can override the best visual design. A room that is too warm, too cold, or unevenly conditioned asks the body to compensate.',
+    examples: ['A sleep room with cooler night conditions and breathable bedding.', 'A focus room where sun exposure does not overheat the desk zone.', 'A recovery room where tactile warmth supports calm without heaviness.'],
+    principles: ['Read temperature by time of day, not only by thermostat.', 'Use material and airflow as part of thermal comfort.', 'Separate sleep coolth from daytime warmth.', 'Design for seasonal adjustment.'],
+    checklist: ['Observe hot and cold zones across a full day.', 'Check window exposure, airflow, bedding, rugs, and seating.', 'Identify where materials feel too cold, sticky, or heavy.', 'Tune temperature for the room state.', 'Make seasonal changes simple.'],
+    mistakes: ['Treating thermostat setting as the whole problem.', 'Ignoring sunlight and window heat.', 'Choosing materials that fight the room state.', 'Making seasonal adjustment difficult.'],
+    relatedSanctuaries: ['Sleep Sanctuary', 'Recovery Sanctuary', 'Nature Sanctuary'],
+    relatedSlugs: ['darkness-quiet-and-coolth-brief', 'recovery-atmosphere-brief', 'nature-room-living-reference'],
+    diagram: 'sleep-factors',
+  },
+  {
+    slug: 'material-design',
+    title: 'Material Design Guide',
+    description: 'A deep Studio guide to tactile calm, material restraint, texture, surfaces, softness, durability, and visual weight.',
+    definition: 'Material design is the use of texture, hardness, softness, reflectivity, weight, temperature, durability, and restraint to support the state of a room.',
+    whyItMatters: 'Materials decide how a room meets the body. They can create calm, harshness, warmth, echo, visual clutter, or grounded continuity.',
+    examples: ['A recovery room with softer contact points and lower contrast.', 'A creative room with durable work surfaces and fewer distracting finishes.', 'A nature room where natural materials support living references.'],
+    principles: ['Choose materials for state, not theme.', 'Reduce visual weight before adding decorative texture.', 'Balance softness with maintainability.', 'Use tactile contrast carefully.'],
+    checklist: ['Touch the surfaces the body uses most.', 'Identify hard, noisy, cold, reflective, or visually heavy materials.', 'Choose one material change that supports the room state.', 'Check how material affects sound and light.', 'Keep maintenance realistic.'],
+    mistakes: ['Using too many finishes at once.', 'Choosing texture that adds clutter.', 'Ignoring acoustic and thermal effects.', 'Prioritizing novelty over repeatable comfort.'],
+    relatedSanctuaries: ['Recovery Sanctuary', 'Creative Sanctuary', 'Nature Sanctuary'],
+    relatedSlugs: ['recovery-atmosphere-brief', 'creative-room-surface-rhythm', 'plant-view-and-material-story'],
+    diagram: 'recovery-framework',
+  },
+  {
+    slug: 'nature-design',
+    title: 'Nature Design Guide',
+    description: 'A deep Studio guide to plants, views, water, natural materials, outdoor thresholds, living references, and seasonal rhythm.',
+    definition: 'Nature design is the integration of living reference points, views, plants, water, natural materials, daylight movement, outdoor thresholds, and seasonal cues into a room.',
+    whyItMatters: 'Nature contact helps a room feel less sealed and more oriented. It can ground attention, soften recovery spaces, and make daily rituals easier to repeat.',
+    examples: ['A reading room oriented toward a view.', 'A nature sanctuary with plants placed as living references, not clutter.', 'A bedroom with a small morning threshold ritual near daylight.'],
+    principles: ['Use nature as infrastructure, not decoration.', 'Frame views before adding objects.', 'Choose plants and materials that can be cared for.', 'Connect nature to a daily ritual.'],
+    checklist: ['Identify the strongest existing nature cue.', 'Review views, daylight movement, plants, water, and materials.', 'Remove nature-themed clutter that does not support the room.', 'Place living elements where they can be maintained.', 'Tie the room to a simple outdoor or threshold habit.'],
+    mistakes: ['Adding plants without a care rhythm.', 'Using nature as a decorative theme only.', 'Blocking the best view with furniture.', 'Ignoring seasonal light and maintenance.'],
+    relatedSanctuaries: ['Nature Sanctuary', 'Recovery Sanctuary', 'Sleep Sanctuary'],
+    relatedSlugs: ['nature-room-living-reference', 'plant-view-and-material-story', 'nature-sanctuary-brief'],
+    diagram: 'nature-ladder',
+  },
+  {
+    slug: 'room-rituals',
+    title: 'Room Rituals Guide',
+    description: 'A deep Studio guide to repeatable routines, reset paths, morning and evening transitions, closeout habits, and room care.',
+    definition: 'Room rituals are the repeatable actions that make a room easier to enter, use, reset, and leave. They connect design to daily behavior without making the room feel scripted.',
+    whyItMatters: 'A room only holds its purpose if the supportive state can be repeated. Rituals turn design choices into daily continuity.',
+    examples: ['An evening closeout path that clears visual load before sleep.', 'A focus-room reset that restores the desk after work.', 'A recovery ritual that reduces contrast, sound, and clutter before downshift.'],
+    principles: ['Make the ritual shorter than the friction it removes.', 'Design the room so the next right action is visible.', 'Use light, sound, surface, and storage cues together.', 'Keep rituals quiet, repeatable, and non-performative.'],
+    checklist: ['Name the transition the room needs to support.', 'Identify the first and last action in the ritual.', 'Remove any step that is too hard to repeat.', 'Pair ritual cues with light, sound, surfaces, or storage.', 'Review whether the room is easier to reset after use.'],
+    mistakes: ['Creating routines that require too much effort.', 'Adding visible ritual clutter.', 'Separating behavior from the room layout.', 'Designing for inspiration instead of repeatability.'],
+    relatedSanctuaries: ['Sleep Sanctuary', 'Focus Sanctuary', 'Creative Sanctuary'],
+    relatedSlugs: ['room-ritual-reset-guide', 'morning-and-evening-ritual-story', 'ritual-design-brief'],
+    diagram: 'studio-method',
+  },
 ]
 
 export const seoSlugInventory = [
@@ -217,6 +333,68 @@ export const previewRoutes: PublicPage[] = [
     seoDisclaimer: 'Design guidance only. Not medical advice.',
   },
 ]
+
+function guideHubBody(hub: StudioGuideHub) {
+  return [
+    `Definition: ${hub.definition}`,
+    `Why it matters: ${hub.whyItMatters}`,
+    `Room examples: ${hub.examples.join(' ')}`,
+    `Design principles: ${hub.principles.join(' ')}`,
+    `Common mistakes: ${hub.mistakes.join(' ')}`,
+    `Related sanctuary types: ${hub.relatedSanctuaries.join(', ')}. These sanctuary types keep the guide connected to the larger SANCTUM Studio room library.`,
+    'CTA: begin with one room, observe the strongest layer of friction, tune one condition, and revisit the room after real use before adding more.',
+  ]
+}
+
+export const guideHubRoutes: PublicPage[] = studioGuideHubs.map((hub) => ({
+  path: `/guides/${hub.slug}`,
+  title: `${hub.title} | SANCTUM Studio`,
+  description: hub.description,
+  canonical: `${origin}/guides/${hub.slug}`,
+  h1: hub.title,
+  intro: hub.description,
+  label: 'Studio Guide Hub',
+  principle: `${hub.definition} ${hub.whyItMatters}`,
+  diagram: hub.diagram,
+  updated,
+  observe: hub.examples,
+  tune: hub.principles,
+  checklist: hub.checklist,
+  faqs: [
+    { question: `What is ${hub.title}?`, answer: `${hub.title} is a SANCTUM Studio guide hub for ${hub.definition.toLowerCase()}` },
+    { question: 'Why does this layer matter?', answer: hub.whyItMatters },
+    { question: 'What mistakes should I avoid?', answer: hub.mistakes.join(' ') },
+    { question: 'Where should I continue?', answer: `Continue with ${hub.relatedSanctuaries.join(', ')} and the related Studio articles connected below.` },
+  ],
+  links: [
+    ...hub.relatedSanctuaries.map((label) => ({
+      label,
+      href: label === 'Sleep Sanctuary' ? '/sleep-room-design' : label === 'Focus Sanctuary' ? '/home-office-design' : label === 'Recovery Sanctuary' ? '/recovery-room-design' : label === 'Nature Sanctuary' ? '/nature-and-grounding' : '/room-archetypes',
+      text: `${label} connects this layer to a complete room archetype.`,
+    })),
+    ...hub.relatedSlugs.map((slug) => {
+      const entry = seoEntries.find((item) => item.slug === slug)
+      return {
+        label: entry?.title ?? slug,
+        href: `/articles/${slug}`,
+        text: entry?.description ?? 'Related Studio guide content.',
+      }
+    }),
+  ],
+  cta: `Use ${hub.title} to tune one room layer before adding more objects.`,
+  seoBody: guideHubBody(hub),
+  seoCategory: 'Studio Guide Hub',
+  seoAudience: 'Homeowners, designers, and room teams',
+  seoDisclaimer: 'Design guidance only. Not medical advice.',
+  seoCollectionItems: hub.relatedSlugs.map((slug) => {
+    const entry = seoEntries.find((item) => item.slug === slug)
+    return {
+      label: entry?.title ?? slug,
+      href: `/articles/${slug}`,
+      text: entry?.description ?? 'Related Studio guide content.',
+    }
+  }),
+}))
 
 export const seoPages: PublicPage[] = seoEntries.map((item) => ({
   path: `/articles/${item.slug}`,
