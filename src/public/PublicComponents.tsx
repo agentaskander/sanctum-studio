@@ -72,7 +72,7 @@ function HomePage(page: PublicPage) {
         <div class="library-grid">
           ${LinkPanel('Professional Frameworks', 'Studio-ready frameworks that translate sanctuary design into client-ready design work.', '/professional-frameworks', 'Bridge')}
           ${LinkPanel('Room Archetypes', 'Sleep, focus, recovery, creative, and nature sanctuaries as premium room patterns.', '/room-archetypes', 'Archetypes')}
-          ${LinkPanel('Case Studies', 'Public design narratives that show spatial transformation without private methods.', '/case-studies', 'Studies')}
+          ${LinkPanel('Case Studies', 'Public design narratives that show spatial transformation without implementation methods.', '/case-studies', 'Studies')}
         </div>
       </section>
       <section class="cinema-section library-section">

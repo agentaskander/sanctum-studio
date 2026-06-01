@@ -29,7 +29,7 @@ function bodyFor(title: string, category: string, audience: string) {
   return [
     `${title} is part of SANCTUM Studio's public design library for ${audience.toLowerCase()}. It keeps the existing Studio promise intact: design the environment like an instrument for sleep, focus, recovery, creativity, and calm.`,
     `The Studio method starts with atmosphere before objects. A room is read through light, sound, air, temperature, material, nature, layout, and ritual. Those layers determine whether the space descends, clarifies, softens, opens, or scatters.`,
-    `${category} content stays practical and public. It can be used as a design brief, room story, or guide without publishing private methods or making medical claims.`,
+    `${category} content stays practical and public. It can be used as a design brief, room story, or guide without publishing implementation methods or making medical claims.`,
     `Begin with one room and one intended state. The room might need a protected evening descent, a clearer desk zone, a softer recovery corner, a creative surface, or a stronger connection to plants and outdoor rhythm.`,
     `Observe friction before adding more. Glare, reflected sound, stale air, harsh texture, visual clutter, and hard-to-repeat rituals often create the real design problem. The best first change is usually the one that makes the room easier to use every day.`,
     `A SANCTUM Studio room should feel intentional before it feels styled. The public library gives readers enough structure to act while preserving the premium restraint of the current site.`,
@@ -202,7 +202,7 @@ export const previewRoutes: PublicPage[] = [
     h1: 'Investor Preview',
     intro: 'A public-facing preview of SANCTUM Studio as a design layer for sanctuary rooms, guides, stories, and briefs.',
     label: 'Investor Preview',
-    principle: 'SANCTUM Studio investor language describes the public category and content system without private operating details.',
+    principle: 'SANCTUM Studio investor language describes the public category and content system without protected operating details.',
     diagram: 'room-stack',
     updated,
     observe: ['Public category fit', 'Room archetype clarity', 'Content library depth'],

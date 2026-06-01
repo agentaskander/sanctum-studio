@@ -133,7 +133,7 @@ const pageDetails: Record<string, { label: string; principle: string; observe: s
   },
   'Professional Frameworks': {
     label: 'Professional Layer',
-    principle: 'Professional frameworks translate SANCTUM Studio language into client-ready room briefs while keeping internal SANCTUM implementation methods outside the public site.',
+    principle: 'Professional frameworks translate SANCTUM Studio language into client-ready room briefs while keeping implementation methods outside the public site.',
     observe: ['The room state the client wants to support', 'The visible environmental layers shaping the room', 'The boundaries between design guidance and medical claims'],
     tune: ['Use public sanctuary language', 'Turn observations into design briefs', 'Keep the method elegant, practical, and non-proprietary'],
   },
@@ -145,7 +145,7 @@ const pageDetails: Record<string, { label: string; principle: string; observe: s
   },
   Assessments: {
     label: 'Professional Layer',
-    principle: 'Assessments are public qualitative reviews of the room stack. They name visible friction without publishing internal evaluation machinery.',
+    principle: 'Assessments are qualitative reviews of the room stack. They name visible friction without publishing evaluation machinery.',
     observe: ['Glare, noise, stale air, thermal discomfort, hard materials, missing nature, and ritual friction', 'The maintenance burden of the room', 'The difference between styling and support'],
     tune: ['Prioritize the most visible friction', 'Keep recommendations qualitative', 'Translate findings into one-room implementation steps'],
   },
@@ -159,7 +159,7 @@ const pageDetails: Record<string, { label: string; principle: string; observe: s
     label: 'Professional Layer',
     principle: 'Case studies show how SANCTUM Studio can frame public room transformation through design intent, observed friction, selected interventions, and lived usability.',
     observe: ['The initial atmosphere of the room', 'The intervention sequence', 'The visible change in calm, clarity, recovery, or daily rhythm'],
-    tune: ['Show design reasoning without private methods', 'Avoid guaranteed outcomes', 'Keep the project narrative architectural and human-centered'],
+    tune: ['Show design reasoning without implementation methods', 'Avoid guaranteed outcomes', 'Keep the project narrative architectural and human-centered'],
   },
   'Implementation Guides': {
     label: 'Professional Layer',
@@ -171,7 +171,7 @@ const pageDetails: Record<string, { label: string; principle: string; observe: s
     label: 'SEO Library',
     principle: 'SANCTUM Studio stories show how rooms can shift through light, sound, air, material, nature, ritual, and calmer spatial rhythm.',
     observe: ['The room state before intervention', 'The intended sanctuary archetype', 'The visible design layer being tuned'],
-    tune: ['Keep examples public', 'Show design reasoning without private methods', 'Frame outcomes as lived usability, not medical claims'],
+    tune: ['Keep examples public', 'Show design reasoning without implementation methods', 'Frame outcomes as lived usability, not medical claims'],
   },
   Articles: {
     label: 'SEO Library',
@@ -258,7 +258,7 @@ export const betaPages: PublicPage[] = betaSources.map((sourcePath) => {
     h1: sourcePath === '/' ? 'SANCTUM Studio Beta Preview' : `${source.h1} Beta Preview`,
     label: 'Beta Preview',
     description: `Public-preview beta route for ${source.h1}. ${source.description}`,
-    intro: `${source.intro} This beta route is a public-preview surface and contains no internal route links or private implementation logic.`,
+    intro: `${source.intro} This beta route is a preview surface and contains no protected route links or implementation logic.`,
     cta: `Preview ${source.h1} in the SANCTUM Studio beta route namespace.`,
   }
 })
