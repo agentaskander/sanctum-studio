@@ -77,6 +77,12 @@ const pageDetails: Record<string, { label: string; principle: string; observe: s
     observe: ['How a room changes attention and energy', 'Where light, sound, air, material, and nature compete', 'Which ritual the space should make easier'],
     tune: ['Begin with one room', 'Design the environment like an instrument', 'Stabilize the atmosphere before adding complexity'],
   },
+  'Karaoke Hero': {
+    label: 'Hero Beta',
+    principle: 'Karaoke Hero is a public prototype for improving karaoke clarity before turning everything louder.',
+    observe: ['Venue type', 'Microphone level', 'Feedback risk', 'Buried vocals', 'Volume pressure'],
+    tune: ['Pick the venue', 'Enable microphone locally', 'Run a quick check', 'Apply the top fix'],
+  },
   'Sleep Room Design': {
     label: 'Sleep Sanctuary',
     principle: 'Sleep room design turns the bedroom into a sanctuary instrument: darker, quieter, softer, breathable, and easier to leave behind at night.',
@@ -217,6 +223,7 @@ function page(path: string, title: string, description: string, h1: string, topi
 
 export const pages: PublicPage[] = [
   page('/', 'SANCTUM Studio | Design Your Environment Like an Instrument', 'SANCTUM Studio creates premium space-design systems for sleep, focus, recovery, creativity, and calm.', 'Design Your Environment Like an Instrument', 'SANCTUM Studio', 'room-stack'),
+  page('/karaoke-hero', 'Karaoke Hero | SANCTUM Studio', 'Karaoke Hero is a public prototype that helps karaoke operators find feedback, buried vocals, and volume problems before turning louder.', 'Make Karaoke Sound Better Without Turning It Louder', 'Karaoke Hero', 'focus-framework'),
   page('/sleep-room-design', 'Sleep Sanctuary Design | SANCTUM Studio', 'Premium sleep room design for darkness, quiet, breathable air, soft materials, and evening room rhythm.', 'Sleep Room Design', 'Sleep Room Design', 'sleep-factors'),
   page('/home-office-design', 'Home Office Design | SANCTUM Studio', 'Cognitive space design for home offices through task light, quiet, air, layout, and visual calm.', 'Home Office Design', 'Home Office Design', 'focus-framework'),
   page('/recovery-room-design', 'Recovery Room Design | SANCTUM Studio', 'Recovery sanctuary design through low contrast, privacy, tactile comfort, sound, air, and spatial calm.', 'Recovery Room Design', 'Recovery Room Design', 'recovery-framework'),

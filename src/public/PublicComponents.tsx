@@ -18,7 +18,91 @@ export function SeoHead(page: PublicPage) {
 }
 
 export function PageShell(page: PublicPage) {
+  if (page.path === '/karaoke-hero') {
+    return KaraokeHeroPublicPage(page)
+  }
+
   return page.path === '/' ? HomePage(page) : PillarPage(page)
+}
+
+function KaraokeHeroPublicPage(page: PublicPage) {
+  const steps = [
+    ['01', 'Pick venue', 'Choose the room or event context so the check starts with the right goal.'],
+    ['02', 'Enable mic', 'Use the browser microphone locally to read level and clarity signals.'],
+    ['03', 'Run quick check', 'Look for feedback risk, buried vocals, muddy sound, and volume pressure.'],
+    ['04', 'Apply top fix', 'Make one practical change before turning everything louder.'],
+  ]
+  const useCases = ['Home karaoke', 'Church', 'Barangay event', 'Wedding DJ', 'School program']
+
+  return `
+    <header class="public-hero hero-beta-hero">
+      ${PublicNav()}
+      <div class="hero-beta-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Hero Beta | Powered by SANCTUM</p>
+          <h1>${page.h1}</h1>
+          <p class="lede">Karaoke Hero is a lightweight prototype that helps a host or venue operator find feedback, muddy sound, buried vocals, and volume problems before the room gets louder.</p>
+          <div class="hero-actions">
+            <a class="primary-link" href="#hero-check">Start Hero Check</a>
+            <a class="secondary-link" href="#how-it-works">How it works</a>
+          </div>
+        </div>
+        <aside class="hero-beta-panel" aria-label="Karaoke Hero beta notice">
+          <span>Prototype validation build</span>
+          <h2>Guidance only. No audio is uploaded.</h2>
+          <p>Microphone analysis stays in your browser. No recordings are uploaded or stored.</p>
+        </aside>
+      </div>
+    </header>
+    <main>
+      <section id="how-it-works" class="cinema-section hero-beta-section">
+        <div class="section-head">
+          <p class="kicker">How It Works</p>
+          <h2>One quick sound check before raising the volume.</h2>
+        </div>
+        <div class="hero-beta-step-grid">
+          ${steps.map(([number, title, text]) => `<article class="hero-beta-card"><span>${number}</span><h3>${title}</h3><p>${text}</p></article>`).join('')}
+        </div>
+      </section>
+      <section class="cinema-section hero-beta-section hero-beta-light">
+        <div class="section-head">
+          <p class="kicker">Use Cases</p>
+          <h2>Built for everyday karaoke and community sound checks.</h2>
+        </div>
+        <div class="hero-beta-use-grid">
+          ${useCases.map((item) => `<article class="hero-beta-use"><h3>${item}</h3><p>Check vocal clarity, feedback risk, and practical setup moves before making the system louder.</p></article>`).join('')}
+        </div>
+      </section>
+      <section id="hero-check" class="cinema-section hero-beta-section">
+        <div class="hero-beta-check">
+          <div>
+            <p class="kicker">Start Hero Check</p>
+            <h2>Public beta path.</h2>
+            <p>This public page is a validation entry point. The production-safe check starts with venue selection, local microphone permission, a quick read, and one top fix.</p>
+          </div>
+          <ol>
+            <li>Pick the venue: home, church, barangay, wedding, or school.</li>
+            <li>Enable microphone only when ready.</li>
+            <li>Run the quick check in the browser.</li>
+            <li>Apply one fix before increasing volume.</li>
+          </ol>
+        </div>
+      </section>
+      <section class="cinema-section hero-beta-section hero-beta-privacy">
+        <div class="hero-beta-note">
+          <h2>Prototype validation build.</h2>
+          <p>Results are guidance only. Karaoke Hero is not a certified acoustic measurement system.</p>
+        </div>
+        <div class="hero-beta-note">
+          <h2>Privacy note.</h2>
+          <p>Microphone analysis stays in your browser. No recordings are uploaded or stored.</p>
+        </div>
+      </section>
+      ${CTA('Make karaoke clearer first.', 'Try the public Hero beta flow before turning the room louder.', '#hero-check', 'Start Hero Check')}
+      ${Footer()}
+      ${Schema(page)}
+    </main>
+  `
 }
 
 function HomePage(page: PublicPage) {
@@ -202,17 +286,7 @@ function Hero(props: {
 }) {
   return `
     <header class="public-hero">
-      <nav class="public-nav" aria-label="Primary navigation">
-        <a class="brand" href="/"><span>S</span>SANCTUM Studio</a>
-        <div>
-          <a href="/sleep-room-design">Sanctuaries</a>
-          <a href="/guides">Method</a>
-          <a href="/professional-frameworks">Professional</a>
-          <a href="/guides">Guides</a>
-          <a href="/tools">Tools</a>
-          <a href="/about">About</a>
-        </div>
-      </nav>
+      ${PublicNav()}
       <div class="hero-grid">
         <div class="hero-copy">
           <p class="eyebrow">${props.eyebrow}</p>
@@ -226,6 +300,23 @@ function Hero(props: {
         ${OriginalStudioRoomVisual('hero-visual')}
       </div>
     </header>
+  `
+}
+
+function PublicNav() {
+  return `
+    <nav class="public-nav" aria-label="Primary navigation">
+      <a class="brand" href="/"><span>S</span>SANCTUM Studio</a>
+      <div>
+        <a href="/sleep-room-design">Sanctuaries</a>
+        <a href="/guides">Method</a>
+        <a href="/professional-frameworks">Professional</a>
+        <a href="/guides">Guides</a>
+        <a href="/tools">Tools</a>
+        <a href="/karaoke-hero">Hero</a>
+        <a href="/about">About</a>
+      </div>
+    </nav>
   `
 }
 
