@@ -572,6 +572,108 @@
   resize: vertical;
 }
 
+.hero-research-lab {
+  display: grid;
+  gap: 20px;
+  border: 1px solid rgba(33, 99, 85, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(255, 250, 240, 0.9), rgba(231, 246, 241, 0.8)),
+    #ffffff;
+  padding: clamp(22px, 4vw, 32px);
+}
+
+.hero-experimental-badge {
+  display: inline-flex;
+  margin-left: 8px;
+  border: 1px solid rgba(139, 61, 41, 0.22);
+  border-radius: 999px;
+  background: #fff1e8;
+  padding: 3px 8px;
+  color: #8b3d29;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.hero-research-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hero-research-panel {
+  box-shadow: none;
+}
+
+.hero-select-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.hero-select-grid label {
+  display: grid;
+  gap: 8px;
+  color: #15231f;
+  font-weight: 760;
+}
+
+.hero-select-grid span {
+  color: #216355;
+  font-size: 12px;
+  font-weight: 820;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-select-grid select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(33, 99, 85, 0.2);
+  border-radius: 8px;
+  background: #fffdf8;
+  color: #15231f;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.hero-room-response {
+  background:
+    linear-gradient(145deg, rgba(223, 244, 237, 0.92), rgba(255, 253, 248, 0.9)),
+    #ffffff;
+}
+
+.hero-room-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.hero-room-grid article {
+  border: 1px solid rgba(33, 99, 85, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 14px;
+}
+
+.hero-room-grid span {
+  display: block;
+  color: #216355;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero-room-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: #15231f;
+  font-size: 18px;
+}
+
 .hero-grid {
   position: relative;
   z-index: 1;
@@ -1410,7 +1512,8 @@ dd,
   }
 
   .hero-demo-grid,
-  .hero-report-columns {
+  .hero-report-columns,
+  .hero-research-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1427,6 +1530,8 @@ dd,
   .hero-score-grid,
   .hero-venue-grid,
   .hero-report-grid,
+  .hero-room-grid,
+  .hero-select-grid,
   .hero-beta-step-grid,
   .hero-beta-use-grid,
   .room-layer-grid,

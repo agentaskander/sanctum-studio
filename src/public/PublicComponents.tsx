@@ -63,6 +63,15 @@ type HeroSample = {
   bands: Record<string, number>
 }
 
+type HeroResearchResult = {
+  strongest: string
+  weakest: string
+  profile: string
+  action: string
+  personality: string
+  confidence: 'Simulated' | 'Assisted' | 'Measured Sample'
+}
+
 let karaokeHeroCleanup: (() => void) | undefined
 
 function bindKaraokeHeroDemo() {
@@ -104,12 +113,30 @@ function bindKaraokeHeroDemo() {
   let liveRisk = 0
   let diagnosticSamples: HeroSample[] = []
   let diagnosticRunning = false
+  let experimentTimer: number | undefined
+  let experimentFrame: number | undefined
+  let experimentOscillator: OscillatorNode | undefined
+  let experimentGain: GainNode | undefined
+  let researchSamples: Array<Record<string, number>> = []
+  let experimentRunId = 0
+  let lastResearchResult: HeroResearchResult = {
+    strongest: 'Waiting for test',
+    weakest: 'Waiting for test',
+    profile: 'No room sample yet.',
+    action: 'Enable Mic Check, start with low speaker volume, then run a research test.',
+    personality: 'Simulated',
+    confidence: 'Simulated',
+  }
 
   const controls = Array.from(root.querySelectorAll<HTMLInputElement>('[data-control]'))
   const venueButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-venue]'))
   const runButton = root.querySelector<HTMLButtonElement>('[data-run-diagnostic]')
   const enableMicButton = root.querySelector<HTMLButtonElement>('[data-enable-mic]')
   const stopMicButton = root.querySelector<HTMLButtonElement>('[data-stop-mic]')
+  const runSweepButton = root.querySelector<HTMLButtonElement>('[data-run-sweep]')
+  const runClapButton = root.querySelector<HTMLButtonElement>('[data-run-clap]')
+  const runBurstButton = root.querySelector<HTMLButtonElement>('[data-run-burst]')
+  const stopExperimentButton = root.querySelector<HTMLButtonElement>('[data-stop-experiment]')
   const progress = root.querySelector<HTMLElement>('[data-progress]')
   const countdownLabel = root.querySelector<HTMLElement>('[data-countdown]')
   const spectrumGrid = root.querySelector<HTMLElement>('[data-spectrum-grid]')
@@ -125,6 +152,50 @@ function bindKaraokeHeroDemo() {
   const riskLabel = (score: number) => score >= 76 ? 'Critical' : score >= 58 ? 'High' : score >= 36 ? 'Watch' : 'Low'
   const signalLabel = (level: number) => level < 6 ? 'silent' : level < 22 ? 'low' : level < 78 ? 'good' : 'too loud'
   const bandStatus = (level: number) => level >= 76 ? 'hot' : level >= 52 ? 'active' : level >= 24 ? 'present' : 'quiet'
+  const researchConfidence = () => researchSamples.length ? 'Measured Sample' : micStatus === 'listening' ? 'Assisted' : 'Simulated'
+
+  const regionFromBand = (id: string) => bands.find((band) => band.id === id)?.label ?? id
+
+  const roomPersonality = (levels: Record<string, number>) => {
+    const bass = levels.bass ?? 0
+    const body = levels.body ?? 0
+    const presence = levels.presence ?? 0
+    const harsh = levels.harsh ?? 0
+    const air = levels.air ?? 0
+    if (bass > Math.max(body, presence, harsh) + 8) return 'Bass Heavy'
+    if (body > Math.max(bass, harsh, air) + 6) return 'Mid Forward'
+    if (harsh + air > bass + body + 12) return 'Bright'
+    if (liveRisk > 62 || harsh > 62) return 'Echo Friendly'
+    if (body >= 36 && harsh < 45 && bass < 55) return 'Speech Friendly'
+    return 'Music Friendly'
+  }
+
+  const researchAction = (strongest: string, weakest: string) => {
+    if (strongest === 'bass') return 'Move speakers away from corners and reduce bass before raising volume.'
+    if (strongest === 'harsh' || strongest === 'presence') return 'Reduce treble/echo and move the mic behind the speaker line.'
+    if (weakest === 'body') return 'Bring vocals forward by lowering music bed and reducing echo.'
+    if (strongest === 'air') return 'Reduce hiss/treble and keep the mic away from speaker aim.'
+    return 'Use the Fix Coach first action, then retest at a lower volume.'
+  }
+
+  const summarizeResearch = (samples: Array<Record<string, number>>, fallback = 'Run a measured test with Mic Check enabled.') => {
+    const averages = Object.fromEntries(bands.map((band) => [band.id, average(samples.map((sample) => sample[band.id] ?? 0))]))
+    const ranked = [...bands].sort((a, b) => (averages[b.id] ?? 0) - (averages[a.id] ?? 0))
+    const strongest = ranked[0]?.id ?? 'body'
+    const weakest = ranked[ranked.length - 1]?.id ?? 'air'
+    const personality = roomPersonality(averages)
+    const profile = samples.length
+      ? `${personality}: strongest around ${regionFromBand(strongest)}, weakest around ${regionFromBand(weakest)}. Experimental estimate only.`
+      : fallback
+    return {
+      strongest: regionFromBand(strongest),
+      weakest: regionFromBand(weakest),
+      profile,
+      action: samples.length ? researchAction(strongest, weakest) : 'Enable Mic Check for a measured sample.',
+      personality,
+      confidence: researchConfidence(),
+    } satisfies HeroResearchResult
+  }
 
   const issueList = () => {
     const current = currentValues()
@@ -238,6 +309,20 @@ function bindKaraokeHeroDemo() {
     renderSpectrum()
   }
 
+  const renderResearch = () => {
+    setText('[data-room-strongest]', lastResearchResult.strongest)
+    setText('[data-room-weakest]', lastResearchResult.weakest)
+    setText('[data-room-profile]', lastResearchResult.profile)
+    setText('[data-room-action]', lastResearchResult.action)
+    setText('[data-room-personality]', lastResearchResult.personality)
+    setText('[data-room-confidence]', lastResearchResult.confidence)
+    const running = Boolean(experimentTimer || experimentFrame || experimentOscillator)
+    if (runSweepButton) runSweepButton.disabled = running
+    if (runClapButton) runClapButton.disabled = running
+    if (runBurstButton) runBurstButton.disabled = running
+    if (stopExperimentButton) stopExperimentButton.disabled = !running
+  }
+
   const render = () => {
     const result = scores()
     for (const control of controls) {
@@ -259,6 +344,7 @@ function bindKaraokeHeroDemo() {
     setText('[data-coach-source]', micStatus === 'listening' ? 'Live mic + controls' : 'Simulated controls')
     venueButtons.forEach((button) => button.classList.toggle('active', button.dataset.venue === selectedVenue))
     renderMicStatus()
+    renderResearch()
   }
 
   const applyPreset = (id: string) => {
@@ -353,7 +439,179 @@ function bindKaraokeHeroDemo() {
     animationFrame = window.requestAnimationFrame(readMicFrame)
   }
 
+  const stopExperiment = (message = 'Experiment stopped.') => {
+    experimentRunId += 1
+    if (experimentTimer) window.clearInterval(experimentTimer)
+    experimentTimer = undefined
+    if (experimentFrame) window.cancelAnimationFrame(experimentFrame)
+    experimentFrame = undefined
+    try {
+      experimentOscillator?.stop()
+    } catch {
+      // Already stopped nodes are fine during cancel/cleanup.
+    }
+    experimentOscillator?.disconnect()
+    experimentOscillator = undefined
+    experimentGain?.disconnect()
+    experimentGain = undefined
+    setText('[data-experiment-status]', message)
+    renderResearch()
+  }
+
+  const ensureOutputContext = async () => {
+    const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioContextClass) throw new Error('AudioContext is not supported.')
+    if (!audioContext || audioContext.state === 'closed') audioContext = new AudioContextClass()
+    if (audioContext.state === 'suspended') await audioContext.resume()
+    return audioContext
+  }
+
+  const captureResearchSample = () => {
+    if (micStatus === 'listening') researchSamples.push({ ...liveBands })
+  }
+
+  const finishResearch = (fallback: string) => {
+    lastResearchResult = summarizeResearch(researchSamples, fallback)
+    renderResearch()
+  }
+
+  const runSweep = async () => {
+    stopExperiment('')
+    const runId = experimentRunId
+    researchSamples = []
+    const sweepSelect = root.querySelector<HTMLSelectElement>('[data-sweep-range]')
+    const durationSelect = root.querySelector<HTMLSelectElement>('[data-sweep-duration]')
+    const [startHz, endHz] = (sweepSelect?.value ?? '40-4000').split('-').map(Number)
+    const duration = Number(durationSelect?.value ?? 2)
+    try {
+      const context = await ensureOutputContext()
+      experimentOscillator = context.createOscillator()
+      experimentGain = context.createGain()
+      experimentGain.gain.setValueAtTime(0.0001, context.currentTime)
+      experimentGain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.06)
+      experimentGain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration)
+      experimentOscillator.frequency.setValueAtTime(startHz, context.currentTime)
+      experimentOscillator.frequency.exponentialRampToValueAtTime(endHz, context.currentTime + duration)
+      experimentOscillator.connect(experimentGain).connect(context.destination)
+      experimentOscillator.start()
+      experimentOscillator.stop(context.currentTime + duration)
+      setText('[data-experiment-status]', `Running sweep ${startHz} Hz to ${endHz} Hz. Start with low speaker volume.`)
+      experimentTimer = window.setInterval(captureResearchSample, 120)
+      window.setTimeout(() => {
+        if (runId !== experimentRunId) return
+        stopExperiment('Sweep complete. Experimental estimate only.')
+        finishResearch('Sweep played. Enable Mic Check to measure room response.')
+      }, duration * 1000 + 120)
+      renderResearch()
+    } catch {
+      setText('[data-experiment-status]', 'Could not run sweep in this browser.')
+    }
+  }
+
+  const runClapTest = () => {
+    stopExperiment('')
+    const runId = experimentRunId
+    researchSamples = []
+    if (micStatus !== 'listening') {
+      setText('[data-experiment-status]', 'Enable Mic Check before starting the clap test.')
+      return
+    }
+    let phase = 3
+    let peak = 0
+    const decay: number[] = []
+    setText('[data-experiment-status]', 'Clap test countdown: 3')
+    experimentTimer = window.setInterval(() => {
+      phase -= 1
+      if (runId !== experimentRunId) return
+      if (phase > 0) {
+        setText('[data-experiment-status]', `Clap test countdown: ${phase}`)
+        return
+      }
+      window.clearInterval(experimentTimer)
+      experimentTimer = undefined
+      setText('[data-experiment-status]', 'Clap now. Listening for decay tendency...')
+      const started = performance.now()
+      const watch = () => {
+        if (runId !== experimentRunId) return
+        captureResearchSample()
+        peak = Math.max(peak, liveLevel)
+        decay.push(liveLevel)
+        if (performance.now() - started < 2600) {
+          experimentFrame = window.requestAnimationFrame(watch)
+          return
+        }
+        experimentFrame = undefined
+        const tail = average(decay.slice(Math.floor(decay.length * 0.58)))
+        const liveliness = tail > 42 ? 'Echoey' : tail > 28 ? 'Live' : tail > 14 ? 'Controlled' : 'Dry'
+        lastResearchResult = {
+          ...summarizeResearch(researchSamples),
+          profile: `Peak strength ${clampScore(peak)}/100 with ${liveliness} estimated room liveliness. This is not RT60 accuracy.`,
+          action: liveliness === 'Echoey' || liveliness === 'Live' ? 'Reduce echo, move speakers away from hard walls, and keep speech volume controlled.' : 'Room decay seems manageable; focus on vocal balance and feedback risk.',
+          personality: liveliness === 'Dry' ? 'Speech Friendly' : liveliness === 'Controlled' ? 'Music Friendly' : 'Echo Friendly',
+          confidence: 'Measured Sample',
+        }
+        setText('[data-experiment-status]', 'Clap test complete. Experimental estimate only.')
+        renderResearch()
+      }
+      watch()
+    }, 1000)
+    renderResearch()
+  }
+
+  const runToneBurst = async () => {
+    stopExperiment('')
+    const runId = experimentRunId
+    researchSamples = []
+    const frequencies = [250, 500, 1000, 2000, 4000]
+    const burstResults: Record<string, number> = {}
+    try {
+      const context = await ensureOutputContext()
+      let index = 0
+      const playNext = () => {
+        if (runId !== experimentRunId) return
+        if (index >= frequencies.length) {
+          const ranked = Object.entries(burstResults).sort((a, b) => b[1] - a[1])
+          const strongest = ranked[0]?.[0] ?? '1 kHz'
+          const weakest = ranked[ranked.length - 1]?.[0] ?? '4 kHz'
+          stopExperiment('Tone burst complete. Experimental estimate only.')
+          finishResearch('Tone bursts played. Enable Mic Check to measure response.')
+          setText('[data-room-profile]', `Strongest burst: ${strongest}. Weakest burst: ${weakest}. Experimental estimate only.`)
+          return
+        }
+        const frequency = frequencies[index]
+        setText('[data-experiment-status]', `Running tone burst ${frequency} Hz. Keep volume low.`)
+        const oscillator = context.createOscillator()
+        const gain = context.createGain()
+        oscillator.frequency.setValueAtTime(frequency, context.currentTime)
+        gain.gain.setValueAtTime(0.0001, context.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.07, context.currentTime + 0.03)
+        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.34)
+        oscillator.connect(gain).connect(context.destination)
+        experimentOscillator = oscillator
+        experimentGain = gain
+        const beforeCount = researchSamples.length
+        oscillator.start()
+        oscillator.stop(context.currentTime + 0.36)
+        const sampleTimer = window.setInterval(captureResearchSample, 60)
+        window.setTimeout(() => {
+          window.clearInterval(sampleTimer)
+          if (runId !== experimentRunId) return
+          burstResults[`${frequency >= 1000 ? `${frequency / 1000} kHz` : `${frequency} Hz`}`] = average(researchSamples.slice(beforeCount).map((sample) => average(Object.values(sample))))
+          oscillator.disconnect()
+          gain.disconnect()
+          index += 1
+          window.setTimeout(playNext, 180)
+        }, 430)
+      }
+      playNext()
+      renderResearch()
+    } catch {
+      setText('[data-experiment-status]', 'Could not run tone burst in this browser.')
+    }
+  }
+
   const stopMic = async (status: typeof micStatus = 'stopped') => {
+    stopExperiment('Experiment stopped because mic stopped.')
     if (timer) window.clearInterval(timer)
     timer = undefined
     diagnosticRunning = false
@@ -413,6 +671,10 @@ function bindKaraokeHeroDemo() {
   controls.forEach((control) => control.addEventListener('input', render))
   enableMicButton?.addEventListener('click', () => void enableMic())
   stopMicButton?.addEventListener('click', () => void stopMic())
+  runSweepButton?.addEventListener('click', () => void runSweep())
+  runClapButton?.addEventListener('click', runClapTest)
+  runBurstButton?.addEventListener('click', () => void runToneBurst())
+  stopExperimentButton?.addEventListener('click', () => stopExperiment())
   runButton?.addEventListener('click', () => {
     if (micStatus !== 'listening') {
       if (countdownLabel) countdownLabel.textContent = 'Enable Mic Check first to run the real diagnostic.'
@@ -440,6 +702,7 @@ function bindKaraokeHeroDemo() {
   })
 
   karaokeHeroCleanup = () => {
+    stopExperiment('Experiment stopped.')
     void stopMic()
     if (timer) window.clearInterval(timer)
   }
@@ -617,6 +880,79 @@ function KaraokeHeroPublicPage(page: PublicPage) {
               <h3>Share text</h3>
               <textarea readonly data-share-text></textarea>
             </div>
+          </div>
+        </section>
+        <section class="hero-research-lab" id="acoustic-research-lab">
+          <div class="section-head">
+            <p class="kicker">Acoustic Research Lab <span class="hero-experimental-badge">Experimental</span></p>
+            <h2>Explore your room using simple browser-local sound tests.</h2>
+            <p>These tests are approximate learning tools, not certified acoustic measurement. Start with low speaker volume. Sweeps and tones can be loud or annoying.</p>
+          </div>
+          <div class="hero-live-note">
+            <strong>Privacy:</strong>
+            <span>All tests run locally in your browser. No audio is uploaded or saved.</span>
+          </div>
+          <div class="hero-research-grid">
+            <section class="hero-demo-panel hero-research-panel">
+              <div class="hero-demo-panel-head">
+                <p class="kicker">Frequency Sweep</p>
+                <h3>Run Sweep</h3>
+              </div>
+              <div class="hero-select-grid">
+                <label>
+                  <span>Sweep range</span>
+                  <select data-sweep-range>
+                    <option value="40-4000">40 Hz -> 4 kHz</option>
+                    <option value="80-8000">80 Hz -> 8 kHz</option>
+                    <option value="100-12000">100 Hz -> 12 kHz</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Duration</span>
+                  <select data-sweep-duration>
+                    <option value="2">2s</option>
+                    <option value="5">5s</option>
+                    <option value="10">10s</option>
+                  </select>
+                </label>
+              </div>
+              <p>Uses a browser-generated oscillator sweep. With Mic Check on, the existing analyser samples the room response during the sweep.</p>
+              <button class="primary-link hero-run-button" type="button" data-run-sweep>Run Sweep</button>
+            </section>
+            <section class="hero-demo-panel hero-research-panel">
+              <div class="hero-demo-panel-head">
+                <p class="kicker">Clap Test</p>
+                <h3>Start Clap Test</h3>
+              </div>
+              <p>Counts down 3, 2, 1, then listens for peak strength and rough decay tendency. Estimated room liveliness only; no RT60 claim.</p>
+              <button class="primary-link hero-run-button" type="button" data-run-clap>Start Clap Test</button>
+            </section>
+            <section class="hero-demo-panel hero-research-panel">
+              <div class="hero-demo-panel-head">
+                <p class="kicker">Tone Burst</p>
+                <h3>Run Tone Burst</h3>
+              </div>
+              <p>Plays short browser-generated bursts at 250 Hz, 500 Hz, 1 kHz, 2 kHz, and 4 kHz, then compares approximate response.</p>
+              <button class="primary-link hero-run-button" type="button" data-run-burst>Run Tone Burst</button>
+            </section>
+            <section class="hero-demo-panel hero-research-panel hero-room-response">
+              <div class="hero-demo-panel-head">
+                <p class="kicker">Room Response Card</p>
+                <h3>Experimental result</h3>
+              </div>
+              <div class="hero-room-grid">
+                <article><span>Strongest region</span><strong data-room-strongest>Waiting for test</strong></article>
+                <article><span>Weakest region</span><strong data-room-weakest>Waiting for test</strong></article>
+                <article><span>Room personality</span><strong data-room-personality>Simulated</strong></article>
+                <article><span>Confidence</span><strong data-room-confidence>Simulated</strong></article>
+              </div>
+              <p data-room-profile>No room sample yet.</p>
+              <p><strong>Suggested action:</strong> <span data-room-action>Enable Mic Check, start with low speaker volume, then run a research test.</span></p>
+              <div class="hero-button-row">
+                <button class="secondary-link hero-run-button" type="button" data-stop-experiment disabled>Stop / Cancel Experiment</button>
+              </div>
+              <p class="hero-countdown" data-experiment-status>Research lab ready. Keep speaker volume low.</p>
+            </section>
           </div>
         </section>
       </section>
