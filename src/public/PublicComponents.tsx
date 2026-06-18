@@ -25,14 +25,209 @@ export function PageShell(page: PublicPage) {
   return page.path === '/' ? HomePage(page) : PillarPage(page)
 }
 
+export function bindPublicPage(page: PublicPage) {
+  if (page.path !== '/karaoke-hero') return
+  bindKaraokeHeroDemo()
+}
+
+type HeroPreset = {
+  label: string
+  controls: Record<string, number>
+}
+
+function bindKaraokeHeroDemo() {
+  const root = document.querySelector<HTMLElement>('[data-hero-demo]')
+  if (!root) return
+
+  const presets: Record<string, HeroPreset> = {
+    home: { label: 'Home karaoke', controls: { volume: 72, echo: 58, bass: 48, treble: 46, mic: 62, balance: 64 } },
+    church: { label: 'Church', controls: { volume: 55, echo: 42, bass: 34, treble: 36, mic: 48, balance: 42 } },
+    barangay: { label: 'Barangay event', controls: { volume: 86, echo: 54, bass: 66, treble: 62, mic: 58, balance: 68 } },
+    wedding: { label: 'Wedding DJ', controls: { volume: 68, echo: 36, bass: 44, treble: 52, mic: 46, balance: 58 } },
+    school: { label: 'School program', controls: { volume: 61, echo: 38, bass: 36, treble: 42, mic: 68, balance: 52 } },
+  }
+
+  let selectedVenue = 'home'
+  let timer: number | undefined
+  let countdown = 10
+
+  const controls = Array.from(root.querySelectorAll<HTMLInputElement>('[data-control]'))
+  const venueButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-venue]'))
+  const runButton = root.querySelector<HTMLButtonElement>('[data-run-diagnostic]')
+  const progress = root.querySelector<HTMLElement>('[data-progress]')
+  const countdownLabel = root.querySelector<HTMLElement>('[data-countdown]')
+
+  const setText = (selector: string, value: string) => {
+    const node = root.querySelector<HTMLElement>(selector)
+    if (node) node.textContent = value
+  }
+  const currentValues = () => Object.fromEntries(controls.map((control) => [control.dataset.control ?? '', Number(control.value)]))
+  const clampScore = (value: number) => Math.max(0, Math.min(100, Math.round(value)))
+  const scoreLabel = (score: number) => score >= 82 ? 'Strong' : score >= 68 ? 'Usable' : score >= 52 ? 'Needs tuning' : 'Problem'
+  const riskLabel = (score: number) => score >= 76 ? 'Critical' : score >= 58 ? 'High' : score >= 36 ? 'Watch' : 'Low'
+
+  const issueList = () => {
+    const current = currentValues()
+    const micTooFar = Math.max(0, current.mic - 55)
+    const micTooClose = Math.max(0, 30 - current.mic)
+    return [
+      {
+        label: 'Volume too high',
+        severity: current.volume,
+        primary: 'Lower master volume 10-15%.',
+        why: 'High master volume raises feedback risk and makes neighbors hear harshness before clarity.',
+        backups: ['Lower the music bed under vocals.', 'Aim speakers away from reflective walls.'],
+      },
+      {
+        label: 'Echo too high',
+        severity: current.echo,
+        primary: 'Reduce echo before increasing volume.',
+        why: 'Too much echo smears words, so singers sound buried even when the system is loud.',
+        backups: ['Use less reverb on speech.', 'Keep the mic closer to the singer.'],
+      },
+      {
+        label: 'Bass mud',
+        severity: current.bass,
+        primary: 'Cut bass mud and move speakers away from corners.',
+        why: 'Boomy low end masks the vocal range and makes the room feel louder than it is.',
+        backups: ['Raise the speaker if it is on the floor.', 'Lower music bass before raising vocals.'],
+      },
+      {
+        label: 'Treble harshness',
+        severity: current.treble,
+        primary: 'Reduce treble or presence a little.',
+        why: 'Harsh treble makes microphones more piercing and increases feedback risk.',
+        backups: ['Move the mic behind the speaker line.', 'Reduce echo after reducing treble.'],
+      },
+      {
+        label: 'Mic too far',
+        severity: micTooFar * 1.6,
+        primary: 'Bring the mic closer to the singer.',
+        why: 'A far mic captures more room noise, so vocals disappear behind the music.',
+        backups: ['Lower the music bed.', 'Keep the singer one fist from the mic.'],
+      },
+      {
+        label: 'Mic too close',
+        severity: micTooClose * 1.8,
+        primary: 'Move the mic slightly farther from the mouth.',
+        why: 'A very close mic can overload, distort, and trigger sudden feedback.',
+        backups: ['Lower mic gain.', 'Keep the singer behind the speaker line.'],
+      },
+      {
+        label: 'Vocals buried',
+        severity: current.balance,
+        primary: 'Lower the music bed under the vocal.',
+        why: 'When the track overpowers the mic, turning up everything makes the room louder but not clearer.',
+        backups: ['Bring the mic closer.', 'Reduce echo so words stay intelligible.'],
+      },
+    ].sort((a, b) => b.severity - a.severity)
+  }
+
+  const scores = () => {
+    const current = currentValues()
+    const issues = issueList()
+    const risk = clampScore(current.volume * 0.26 + current.echo * 0.16 + current.treble * 0.26 + Math.max(0, 35 - current.mic) * 0.45 + current.balance * 0.08)
+    const clarity = clampScore(104 - current.echo * 0.24 - current.bass * 0.18 - current.treble * 0.12 - Math.abs(current.mic - 42) * 0.28 - current.balance * 0.18)
+    const neighbor = clampScore(108 - current.volume * 0.42 - current.bass * 0.18 - current.treble * 0.1 - risk * 0.15)
+    const rescue = clampScore((clarity * 0.42) + (neighbor * 0.28) + ((100 - risk) * 0.3))
+    return { rescue, neighbor, clarity, risk, top: issues[0], issues }
+  }
+
+  const render = () => {
+    const result = scores()
+    for (const control of controls) {
+      const output = root.querySelector<HTMLOutputElement>(`[data-output="${control.dataset.control}"]`)
+      if (output) output.textContent = control.value
+    }
+    setText('[data-score="rescue"]', String(result.rescue))
+    setText('[data-score="neighbor"]', String(result.neighbor))
+    setText('[data-score="clarity"]', String(result.clarity))
+    setText('[data-score="risk"]', String(result.risk))
+    setText('[data-score-label="rescue"]', scoreLabel(result.rescue))
+    setText('[data-score-label="neighbor"]', scoreLabel(result.neighbor))
+    setText('[data-score-label="clarity"]', scoreLabel(result.clarity))
+    setText('[data-score-label="risk"]', riskLabel(result.risk))
+    setText('[data-fix-primary]', result.top.primary)
+    setText('[data-fix-why]', result.top.why)
+    const backups = root.querySelector<HTMLElement>('[data-fix-backups]')
+    if (backups) backups.innerHTML = result.top.backups.map((fix) => `<li>${fix}</li>`).join('')
+    venueButtons.forEach((button) => button.classList.toggle('active', button.dataset.venue === selectedVenue))
+  }
+
+  const applyPreset = (id: string) => {
+    selectedVenue = id
+    const preset = presets[id]
+    if (!preset) return
+    controls.forEach((control) => {
+      const key = control.dataset.control ?? ''
+      if (typeof preset.controls[key] === 'number') control.value = String(preset.controls[key])
+    })
+    if (countdownLabel) countdownLabel.textContent = `${preset.label} preset loaded. Ready to run.`
+    render()
+  }
+
+  const finishDiagnostic = () => {
+    const result = scores()
+    const report = root.querySelector<HTMLElement>('[data-report]')
+    const venue = presets[selectedVenue]?.label ?? 'Selected venue'
+    if (report) report.hidden = false
+    setText('[data-report-score]', `${result.rescue}/100`)
+    setText('[data-report-problem]', result.top.label)
+    const fixes = root.querySelector<HTMLElement>('[data-report-fixes]')
+    if (fixes) fixes.innerHTML = result.issues.slice(0, 5).map((item) => `<li>${item.primary}</li>`).join('')
+    const share = root.querySelector<HTMLTextAreaElement>('[data-share-text]')
+    if (share) share.value = `Karaoke Hero demo: ${venue} scored ${result.rescue}/100. Top fix: ${result.top.primary} Public demo mode - simulated guidance only.`
+    if (countdownLabel) countdownLabel.textContent = 'Diagnostic simulation complete.'
+    if (runButton) runButton.disabled = false
+  }
+
+  venueButtons.forEach((button) => button.addEventListener('click', () => applyPreset(button.dataset.venue ?? 'home')))
+  controls.forEach((control) => control.addEventListener('input', render))
+  runButton?.addEventListener('click', () => {
+    if (timer) window.clearInterval(timer)
+    countdown = 10
+    runButton.disabled = true
+    const report = root.querySelector<HTMLElement>('[data-report]')
+    if (report) report.hidden = true
+    if (progress) progress.style.width = '0%'
+    if (countdownLabel) countdownLabel.textContent = 'Running diagnostic simulation: 10 seconds left.'
+    timer = window.setInterval(() => {
+      countdown -= 1
+      if (progress) progress.style.width = `${((10 - countdown) / 10) * 100}%`
+      if (countdownLabel) countdownLabel.textContent = countdown > 0 ? `Running diagnostic simulation: ${countdown} seconds left.` : 'Generating report card...'
+      if (countdown <= 0) {
+        window.clearInterval(timer)
+        timer = undefined
+        finishDiagnostic()
+      }
+    }, 1000)
+  })
+
+  applyPreset(selectedVenue)
+}
+
 function KaraokeHeroPublicPage(page: PublicPage) {
   const steps = [
     ['01', 'Pick venue', 'Choose the room or event context so the check starts with the right goal.'],
-    ['02', 'Enable mic', 'Use the browser microphone locally to read level and clarity signals.'],
-    ['03', 'Run quick check', 'Look for feedback risk, buried vocals, muddy sound, and volume pressure.'],
+    ['02', 'Set the room', 'Adjust volume, echo, bass, treble, mic distance, and music balance.'],
+    ['03', 'Run quick check', 'Generate a simulated 10-second report card for the current setup.'],
     ['04', 'Apply top fix', 'Make one practical change before turning everything louder.'],
   ]
-  const useCases = ['Home karaoke', 'Church', 'Barangay event', 'Wedding DJ', 'School program']
+  const useCases = [
+    ['home', 'Home karaoke', 'Living room karaoke with echo, loud music, and singers fighting the mic.'],
+    ['church', 'Church', 'Speech and worship clarity where feedback can interrupt the room.'],
+    ['barangay', 'Barangay event', 'Announcements and karaoke that need reach without destructive volume.'],
+    ['wedding', 'Wedding DJ', 'Host mic, speeches, vows, and event moments that cannot fail loudly.'],
+    ['school', 'School program', 'Student speech clarity, safe volume, and fast setup for busy staff.'],
+  ]
+  const controls = [
+    ['volume', 'Volume', '72'],
+    ['echo', 'Echo / Reverb', '58'],
+    ['bass', 'Bass Mud', '48'],
+    ['treble', 'Treble Harshness', '46'],
+    ['mic', 'Mic Distance', '62'],
+    ['balance', 'Music vs Vocal Balance', '64'],
+  ]
 
   return `
     <header class="public-hero hero-beta-hero">
@@ -44,13 +239,13 @@ function KaraokeHeroPublicPage(page: PublicPage) {
           <p class="lede">Karaoke Hero is a lightweight prototype that helps a host or venue operator find feedback, muddy sound, buried vocals, and volume problems before the room gets louder.</p>
           <div class="hero-actions">
             <a class="primary-link" href="#hero-check">Start Hero Check</a>
-            <a class="secondary-link" href="#how-it-works">How it works</a>
+            <a class="secondary-link" href="#hero-demo">Open demo</a>
           </div>
         </div>
         <aside class="hero-beta-panel" aria-label="Karaoke Hero beta notice">
-          <span>Prototype validation build</span>
-          <h2>Guidance only. No audio is uploaded.</h2>
-          <p>Microphone analysis stays in your browser. No recordings are uploaded or stored.</p>
+          <span>Public demo mode</span>
+          <h2>Simulated guidance only. No audio is uploaded or recorded.</h2>
+          <p>This public page does not use the internal Karaoke Hero module. It is a safe validation demo powered by SANCTUM.</p>
         </aside>
       </div>
     </header>
@@ -64,38 +259,115 @@ function KaraokeHeroPublicPage(page: PublicPage) {
           ${steps.map(([number, title, text]) => `<article class="hero-beta-card"><span>${number}</span><h3>${title}</h3><p>${text}</p></article>`).join('')}
         </div>
       </section>
+      <section id="hero-demo" class="cinema-section hero-beta-section hero-demo-shell" data-hero-demo>
+        <div class="section-head">
+          <p class="kicker">Interactive Public Demo</p>
+          <h2>Simulate a karaoke rescue check.</h2>
+          <p>Pick a venue, move the controls, and watch the score dashboard and Fix Coach update. This demo is deterministic and does not require microphone access.</p>
+        </div>
+        <div class="hero-score-grid" aria-label="Live score dashboard">
+          <article class="hero-score-card"><span>Karaoke Rescue Score</span><strong data-score="rescue">--</strong><p data-score-label="rescue">Ready</p></article>
+          <article class="hero-score-card"><span>Neighbor Friendly</span><strong data-score="neighbor">--</strong><p data-score-label="neighbor">Ready</p></article>
+          <article class="hero-score-card"><span>Vocal Clarity</span><strong data-score="clarity">--</strong><p data-score-label="clarity">Ready</p></article>
+          <article class="hero-score-card risk"><span>Feedback Risk</span><strong data-score="risk">--</strong><p data-score-label="risk">Ready</p></article>
+        </div>
+        <div class="hero-demo-grid">
+          <section class="hero-demo-panel">
+            <div class="hero-demo-panel-head">
+              <p class="kicker">Pick Venue</p>
+              <h3>Use case cards</h3>
+            </div>
+            <div class="hero-venue-grid">
+              ${useCases.map(([id, title, text]) => `<button class="hero-venue-card" type="button" data-venue="${id}"><strong>${title}</strong><span>${text}</span></button>`).join('')}
+            </div>
+          </section>
+          <section class="hero-demo-panel">
+            <div class="hero-demo-panel-head">
+              <p class="kicker">Simulated Controls</p>
+              <h3>Room settings</h3>
+            </div>
+            <div class="hero-control-list">
+              ${controls.map(([id, label, value]) => `
+                <label class="hero-range">
+                  <span><strong>${label}</strong><output data-output="${id}">${value}</output></span>
+                  <input type="range" min="0" max="100" value="${value}" data-control="${id}" />
+                </label>
+              `).join('')}
+            </div>
+          </section>
+          <section class="hero-demo-panel hero-fix-coach">
+            <div class="hero-demo-panel-head">
+              <p class="kicker">Fix Coach</p>
+              <h3>Do this first</h3>
+            </div>
+            <strong data-fix-primary>Pick a venue to begin.</strong>
+            <p data-fix-why>The coach prioritizes one action from the current simulated setup.</p>
+            <ul data-fix-backups></ul>
+          </section>
+          <section class="hero-demo-panel hero-diagnostic-panel" id="hero-check">
+            <div class="hero-demo-panel-head">
+              <p class="kicker">10-Second Diagnostic Simulation</p>
+              <h3>No real mic required</h3>
+            </div>
+            <p>Run a simulated local check and generate a report card for the selected venue and controls.</p>
+            <div class="hero-progress" aria-label="Diagnostic progress"><span data-progress></span></div>
+            <p class="hero-countdown" data-countdown>Ready to run.</p>
+            <button class="primary-link hero-run-button" type="button" data-run-diagnostic>Run 10-Second Diagnostic</button>
+          </section>
+        </div>
+        <section class="hero-report-card" data-report hidden>
+          <div>
+            <p class="kicker">Report Card</p>
+            <h2>Hero Check Result</h2>
+          </div>
+          <div class="hero-report-grid">
+            <article><span>Overall Score</span><strong data-report-score>--</strong></article>
+            <article><span>Top Problem</span><strong data-report-problem>--</strong></article>
+          </div>
+          <div class="hero-report-columns">
+            <div>
+              <h3>Top 5 fixes</h3>
+              <ol data-report-fixes></ol>
+            </div>
+            <div>
+              <h3>Share text</h3>
+              <textarea readonly data-share-text></textarea>
+            </div>
+          </div>
+        </section>
+      </section>
       <section class="cinema-section hero-beta-section hero-beta-light">
         <div class="section-head">
           <p class="kicker">Use Cases</p>
           <h2>Built for everyday karaoke and community sound checks.</h2>
         </div>
         <div class="hero-beta-use-grid">
-          ${useCases.map((item) => `<article class="hero-beta-use"><h3>${item}</h3><p>Check vocal clarity, feedback risk, and practical setup moves before making the system louder.</p></article>`).join('')}
+          ${useCases.map(([, item, text]) => `<article class="hero-beta-use"><h3>${item}</h3><p>${text}</p></article>`).join('')}
         </div>
       </section>
-      <section id="hero-check" class="cinema-section hero-beta-section">
+      <section class="cinema-section hero-beta-section">
         <div class="hero-beta-check">
           <div>
             <p class="kicker">Start Hero Check</p>
             <h2>Public beta path.</h2>
-            <p>This public page is a validation entry point. The production-safe check starts with venue selection, local microphone permission, a quick read, and one top fix.</p>
+            <p>This public page is a validation entry point. The production-safe check uses simulated controls, a quick read, and one top fix.</p>
           </div>
           <ol>
             <li>Pick the venue: home, church, barangay, wedding, or school.</li>
-            <li>Enable microphone only when ready.</li>
-            <li>Run the quick check in the browser.</li>
+            <li>Adjust the room controls.</li>
+            <li>Run the simulated quick check in the browser.</li>
             <li>Apply one fix before increasing volume.</li>
           </ol>
         </div>
       </section>
       <section class="cinema-section hero-beta-section hero-beta-privacy">
         <div class="hero-beta-note">
-          <h2>Prototype validation build.</h2>
-          <p>Results are guidance only. Karaoke Hero is not a certified acoustic measurement system.</p>
+          <h2>Public demo mode.</h2>
+          <p>Simulated guidance only. Karaoke Hero is not a certified acoustic measurement system.</p>
         </div>
         <div class="hero-beta-note">
           <h2>Privacy note.</h2>
-          <p>Microphone analysis stays in your browser. No recordings are uploaded or stored.</p>
+          <p>No audio is uploaded or recorded. This public demo does not store reports, collect emails, or send setup data to a backend.</p>
         </div>
       </section>
       ${CTA('Make karaoke clearer first.', 'Try the public Hero beta flow before turning the room louder.', '#hero-check', 'Start Hero Check')}

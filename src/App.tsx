@@ -1,6 +1,6 @@
 import './App.css'
 import { InternalPageShell, NotFoundPage } from './internal/InternalComponents'
-import { PageShell, SeoHead } from './public/PublicComponents'
+import { bindPublicPage, PageShell, SeoHead } from './public/PublicComponents'
 import { pageForPath } from './public/pageForPath'
 
 export default function App() {
@@ -21,6 +21,7 @@ export default function App() {
   const page = pageForPath(pathname)
   SeoHead(page)
   document.getElementById('root')!.innerHTML = PageShell(page)
+  bindPublicPage(page)
 }
 
 function isLocalHost(hostname: string) {
