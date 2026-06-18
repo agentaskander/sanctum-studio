@@ -256,6 +256,22 @@
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
 }
 
+.hero-live-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(33, 99, 85, 0.16);
+  border-radius: 8px;
+  background: #fffaf0;
+  padding: 14px 16px;
+  color: #243b35;
+}
+
+.hero-live-note strong {
+  color: #173f36;
+}
+
 .hero-demo-panel,
 .hero-report-card {
   padding: clamp(22px, 4vw, 32px);
@@ -335,10 +351,134 @@
   accent-color: #217560;
 }
 
+.hero-mic-panel,
+.hero-spectrum-panel {
+  background:
+    linear-gradient(145deg, rgba(255, 253, 248, 0.94), rgba(231, 246, 241, 0.82)),
+    #ffffff;
+}
+
+.hero-mic-status-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.hero-mic-status-grid article,
+.hero-risk-detail {
+  border: 1px solid rgba(33, 99, 85, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 14px;
+}
+
+.hero-mic-status-grid span,
+.hero-risk-detail span {
+  display: block;
+  color: #216355;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero-mic-status-grid strong,
+.hero-risk-detail strong {
+  display: block;
+  margin-top: 6px;
+  color: #15231f;
+  font-size: 20px;
+}
+
+.hero-level-meter,
+.hero-spectrum-meter {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(33, 99, 85, 0.12);
+}
+
+.hero-level-meter {
+  margin-bottom: 14px;
+}
+
+.hero-level-meter span,
+.hero-spectrum-meter span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #217560, #9bd8c8);
+  transition: width 120ms linear;
+}
+
+.hero-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.hero-button-row .secondary-link {
+  border: 1px solid rgba(33, 99, 85, 0.24);
+  background: #fffaf0;
+  color: #173f36;
+}
+
+.hero-spectrum-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.hero-spectrum-band {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(33, 99, 85, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.68);
+  padding: 12px;
+}
+
+.hero-spectrum-band div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hero-spectrum-band strong {
+  color: #15231f;
+}
+
+.hero-spectrum-band span,
+.hero-spectrum-band p,
+.hero-risk-detail p {
+  margin: 0;
+  color: #425a52;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.hero-risk-detail {
+  margin-top: 14px;
+}
+
 .hero-fix-coach {
   background:
     linear-gradient(145deg, rgba(223, 244, 237, 0.92), rgba(255, 252, 245, 0.86)),
     #ffffff;
+}
+
+.hero-source-pill {
+  display: inline-flex;
+  margin: 0 0 12px;
+  border: 1px solid rgba(33, 99, 85, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 250, 240, 0.86);
+  padding: 6px 10px;
+  color: #216355;
+  font-size: 12px;
+  font-weight: 820;
 }
 
 .hero-fix-coach > strong {

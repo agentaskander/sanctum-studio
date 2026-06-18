@@ -26,7 +26,11 @@ export function PageShell(page: PublicPage) {
 }
 
 export function bindPublicPage(page: PublicPage) {
-  if (page.path !== '/karaoke-hero') return
+  if (page.path !== '/karaoke-hero') {
+    karaokeHeroCleanup?.()
+    karaokeHeroCleanup = undefined
+    return
+  }
   bindKaraokeHeroDemo()
 }
 
@@ -35,9 +39,37 @@ type HeroPreset = {
   controls: Record<string, number>
 }
 
+type HeroIssue = {
+  label: string
+  severity: number
+  primary: string
+  why: string
+  backups: string[]
+}
+
+type HeroBand = {
+  id: string
+  label: string
+  range: string
+  low: number
+  high: number
+}
+
+type HeroSample = {
+  level: number
+  risk: number
+  clarity: number
+  neighbor: number
+  bands: Record<string, number>
+}
+
+let karaokeHeroCleanup: (() => void) | undefined
+
 function bindKaraokeHeroDemo() {
   const root = document.querySelector<HTMLElement>('[data-hero-demo]')
   if (!root) return
+  karaokeHeroCleanup?.()
+  root.dataset.bound = 'true'
 
   const presets: Record<string, HeroPreset> = {
     home: { label: 'Home karaoke', controls: { volume: 72, echo: 58, bass: 48, treble: 46, mic: 62, balance: 64 } },
@@ -47,15 +79,40 @@ function bindKaraokeHeroDemo() {
     school: { label: 'School program', controls: { volume: 61, echo: 38, bass: 36, treble: 42, mic: 68, balance: 52 } },
   }
 
+  const bands: HeroBand[] = [
+    { id: 'bass', label: 'Bass mud', range: '80-250 Hz', low: 80, high: 250 },
+    { id: 'lowMids', label: 'Low mids', range: '250-500 Hz', low: 250, high: 500 },
+    { id: 'body', label: 'Vocal body', range: '500 Hz-1.5 kHz', low: 500, high: 1500 },
+    { id: 'presence', label: 'Presence', range: '1.5-4 kHz', low: 1500, high: 4000 },
+    { id: 'harsh', label: 'Harsh / feedback', range: '4-8 kHz', low: 4000, high: 8000 },
+    { id: 'air', label: 'Air / hiss', range: '8-12 kHz', low: 8000, high: 12000 },
+  ]
+
   let selectedVenue = 'home'
   let timer: number | undefined
   let countdown = 10
+  let stream: MediaStream | undefined
+  let audioContext: AudioContext | undefined
+  let analyser: AnalyserNode | undefined
+  let source: MediaStreamAudioSourceNode | undefined
+  let frequencyData: Uint8Array<ArrayBuffer> | undefined
+  let timeData: Uint8Array<ArrayBuffer> | undefined
+  let animationFrame: number | undefined
+  let micStatus: 'stopped' | 'waiting' | 'listening' | 'denied' | 'error' = 'stopped'
+  let liveLevel = 0
+  let liveBands: Record<string, number> = Object.fromEntries(bands.map((band) => [band.id, 0]))
+  let liveRisk = 0
+  let diagnosticSamples: HeroSample[] = []
+  let diagnosticRunning = false
 
   const controls = Array.from(root.querySelectorAll<HTMLInputElement>('[data-control]'))
   const venueButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-venue]'))
   const runButton = root.querySelector<HTMLButtonElement>('[data-run-diagnostic]')
+  const enableMicButton = root.querySelector<HTMLButtonElement>('[data-enable-mic]')
+  const stopMicButton = root.querySelector<HTMLButtonElement>('[data-stop-mic]')
   const progress = root.querySelector<HTMLElement>('[data-progress]')
   const countdownLabel = root.querySelector<HTMLElement>('[data-countdown]')
+  const spectrumGrid = root.querySelector<HTMLElement>('[data-spectrum-grid]')
 
   const setText = (selector: string, value: string) => {
     const node = root.querySelector<HTMLElement>(selector)
@@ -63,19 +120,24 @@ function bindKaraokeHeroDemo() {
   }
   const currentValues = () => Object.fromEntries(controls.map((control) => [control.dataset.control ?? '', Number(control.value)]))
   const clampScore = (value: number) => Math.max(0, Math.min(100, Math.round(value)))
+  const average = (values: number[]) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
   const scoreLabel = (score: number) => score >= 82 ? 'Strong' : score >= 68 ? 'Usable' : score >= 52 ? 'Needs tuning' : 'Problem'
   const riskLabel = (score: number) => score >= 76 ? 'Critical' : score >= 58 ? 'High' : score >= 36 ? 'Watch' : 'Low'
+  const signalLabel = (level: number) => level < 6 ? 'silent' : level < 22 ? 'low' : level < 78 ? 'good' : 'too loud'
+  const bandStatus = (level: number) => level >= 76 ? 'hot' : level >= 52 ? 'active' : level >= 24 ? 'present' : 'quiet'
 
   const issueList = () => {
     const current = currentValues()
     const micTooFar = Math.max(0, current.mic - 55)
     const micTooClose = Math.max(0, 30 - current.mic)
+    const liveMode = micStatus === 'listening'
+    const bandHot = Math.max(liveBands.presence ?? 0, liveBands.harsh ?? 0)
     return [
       {
         label: 'Volume too high',
-        severity: current.volume,
-        primary: 'Lower master volume 10-15%.',
-        why: 'High master volume raises feedback risk and makes neighbors hear harshness before clarity.',
+        severity: liveMode ? Math.max(current.volume * 0.65, liveLevel * 1.08) : current.volume,
+        primary: liveMode && liveLevel > 78 ? 'Lower mic gain or master volume now.' : 'Lower master volume 10-15%.',
+        why: liveMode ? 'The live mic level is running hot, so the room is closer to clipping and feedback.' : 'High master volume raises feedback risk and makes neighbors hear harshness before clarity.',
         backups: ['Lower the music bed under vocals.', 'Aim speakers away from reflective walls.'],
       },
       {
@@ -87,16 +149,16 @@ function bindKaraokeHeroDemo() {
       },
       {
         label: 'Bass mud',
-        severity: current.bass,
+        severity: liveMode ? Math.max(current.bass, (liveBands.bass ?? 0) * 1.05) : current.bass,
         primary: 'Cut bass mud and move speakers away from corners.',
-        why: 'Boomy low end masks the vocal range and makes the room feel louder than it is.',
+        why: liveMode ? 'The low-frequency band is strong enough to mask vocal body and make the room feel louder.' : 'Boomy low end masks the vocal range and makes the room feel louder than it is.',
         backups: ['Raise the speaker if it is on the floor.', 'Lower music bass before raising vocals.'],
       },
       {
         label: 'Treble harshness',
-        severity: current.treble,
-        primary: 'Reduce treble or presence a little.',
-        why: 'Harsh treble makes microphones more piercing and increases feedback risk.',
+        severity: liveMode ? Math.max(current.treble, bandHot * 1.12, liveRisk) : current.treble,
+        primary: liveRisk >= 58 ? 'Move the mic behind the speaker line and reduce treble/echo.' : 'Reduce treble or presence a little.',
+        why: liveMode ? 'The live presence/harsh bands are the most likely feedback area right now.' : 'Harsh treble makes microphones more piercing and increases feedback risk.',
         backups: ['Move the mic behind the speaker line.', 'Reduce echo after reducing treble.'],
       },
       {
@@ -120,17 +182,60 @@ function bindKaraokeHeroDemo() {
         why: 'When the track overpowers the mic, turning up everything makes the room louder but not clearer.',
         backups: ['Bring the mic closer.', 'Reduce echo so words stay intelligible.'],
       },
-    ].sort((a, b) => b.severity - a.severity)
+    ].sort((a, b) => b.severity - a.severity) as HeroIssue[]
   }
 
   const scores = () => {
     const current = currentValues()
     const issues = issueList()
-    const risk = clampScore(current.volume * 0.26 + current.echo * 0.16 + current.treble * 0.26 + Math.max(0, 35 - current.mic) * 0.45 + current.balance * 0.08)
-    const clarity = clampScore(104 - current.echo * 0.24 - current.bass * 0.18 - current.treble * 0.12 - Math.abs(current.mic - 42) * 0.28 - current.balance * 0.18)
-    const neighbor = clampScore(108 - current.volume * 0.42 - current.bass * 0.18 - current.treble * 0.1 - risk * 0.15)
+    const liveMode = micStatus === 'listening'
+    const livePresence = liveBands.presence ?? 0
+    const liveHarsh = liveBands.harsh ?? 0
+    const liveBass = liveBands.bass ?? 0
+    const risk = liveMode
+      ? clampScore(liveLevel * 0.42 + livePresence * 0.26 + liveHarsh * 0.38 + current.echo * 0.08 + current.treble * 0.12)
+      : clampScore(current.volume * 0.26 + current.echo * 0.16 + current.treble * 0.26 + Math.max(0, 35 - current.mic) * 0.45 + current.balance * 0.08)
+    liveRisk = risk
+    const clarity = liveMode
+      ? clampScore(104 - liveBass * 0.2 - liveHarsh * 0.16 - current.echo * 0.16 - current.balance * 0.1 + (liveBands.body ?? 0) * 0.08)
+      : clampScore(104 - current.echo * 0.24 - current.bass * 0.18 - current.treble * 0.12 - Math.abs(current.mic - 42) * 0.28 - current.balance * 0.18)
+    const neighbor = liveMode
+      ? clampScore(108 - liveLevel * 0.44 - liveBass * 0.16 - liveHarsh * 0.12 - risk * 0.16)
+      : clampScore(108 - current.volume * 0.42 - current.bass * 0.18 - current.treble * 0.1 - risk * 0.15)
     const rescue = clampScore((clarity * 0.42) + (neighbor * 0.28) + ((100 - risk) * 0.3))
     return { rescue, neighbor, clarity, risk, top: issues[0], issues }
+  }
+
+  const hottestBand = () => bands.reduce((best, band) => (liveBands[band.id] ?? 0) > (liveBands[best.id] ?? 0) ? band : best, bands[0])
+
+  const renderSpectrum = () => {
+    if (!spectrumGrid) return
+    spectrumGrid.innerHTML = bands.map((band) => {
+      const level = clampScore(liveBands[band.id] ?? 0)
+      return `
+        <article class="hero-spectrum-band">
+          <div><strong>${band.label}</strong><span>${band.range}</span></div>
+          <div class="hero-spectrum-meter"><span style="width: ${level}%"></span></div>
+          <p>${level} · ${bandStatus(level)}</p>
+        </article>
+      `
+    }).join('')
+  }
+
+  const renderMicStatus = () => {
+    const clipping = liveLevel >= 88 || (micStatus === 'listening' && liveRisk >= 82)
+    setText('[data-mic-status]', micStatus)
+    setText('[data-mic-level]', String(clampScore(liveLevel)))
+    setText('[data-signal-label]', signalLabel(liveLevel))
+    setText('[data-clipping-warning]', clipping ? 'Clipping warning: input is too hot.' : 'No clipping warning.')
+    setText('[data-mic-coach]', liveLevel < 12 ? 'Move closer or sing/speak toward the mic.' : liveLevel > 82 ? 'Move farther back or lower mic gain.' : 'Signal is usable for a live check.')
+    setText('[data-risk-band]', micStatus === 'listening' ? hottestBand().label : 'Mic off')
+    setText('[data-risk-action]', liveRisk >= 76 ? 'Lower mic gain, move speaker away from mic, and reduce treble/echo.' : liveRisk >= 45 ? 'Watch speaker position and reduce echo before raising volume.' : 'Keep the mic behind the speaker line.')
+    const levelMeter = root.querySelector<HTMLElement>('[data-level-meter]')
+    if (levelMeter) levelMeter.style.width = `${clampScore(liveLevel)}%`
+    if (enableMicButton) enableMicButton.disabled = micStatus === 'waiting' || micStatus === 'listening'
+    if (stopMicButton) stopMicButton.disabled = micStatus !== 'listening'
+    renderSpectrum()
   }
 
   const render = () => {
@@ -151,7 +256,9 @@ function bindKaraokeHeroDemo() {
     setText('[data-fix-why]', result.top.why)
     const backups = root.querySelector<HTMLElement>('[data-fix-backups]')
     if (backups) backups.innerHTML = result.top.backups.map((fix) => `<li>${fix}</li>`).join('')
+    setText('[data-coach-source]', micStatus === 'listening' ? 'Live mic + controls' : 'Simulated controls')
     venueButtons.forEach((button) => button.classList.toggle('active', button.dataset.venue === selectedVenue))
+    renderMicStatus()
   }
 
   const applyPreset = (id: string) => {
@@ -167,7 +274,8 @@ function bindKaraokeHeroDemo() {
   }
 
   const finishDiagnostic = () => {
-    const result = scores()
+    diagnosticRunning = false
+    const result = diagnosticSamples.length ? summarizeSamples() : scores()
     const report = root.querySelector<HTMLElement>('[data-report]')
     const venue = presets[selectedVenue]?.label ?? 'Selected venue'
     if (report) report.hidden = false
@@ -176,25 +284,153 @@ function bindKaraokeHeroDemo() {
     const fixes = root.querySelector<HTMLElement>('[data-report-fixes]')
     if (fixes) fixes.innerHTML = result.issues.slice(0, 5).map((item) => `<li>${item.primary}</li>`).join('')
     const share = root.querySelector<HTMLTextAreaElement>('[data-share-text]')
-    if (share) share.value = `Karaoke Hero demo: ${venue} scored ${result.rescue}/100. Top fix: ${result.top.primary} Public demo mode - simulated guidance only.`
-    if (countdownLabel) countdownLabel.textContent = 'Diagnostic simulation complete.'
+    if (share) share.value = `Karaoke Hero beta: ${venue} scored ${result.rescue}/100 from a browser-local mic check. Top fix: ${result.top.primary} No audio uploaded or saved.`
+    if (countdownLabel) countdownLabel.textContent = 'Real mic diagnostic complete.'
     if (runButton) runButton.disabled = false
+  }
+
+  const summarizeSamples = () => {
+    const avgLevel = average(diagnosticSamples.map((sample) => sample.level))
+    const avgRisk = average(diagnosticSamples.map((sample) => sample.risk))
+    const avgClarity = average(diagnosticSamples.map((sample) => sample.clarity))
+    const avgNeighbor = average(diagnosticSamples.map((sample) => sample.neighbor))
+    const bandAverages = Object.fromEntries(bands.map((band) => [band.id, average(diagnosticSamples.map((sample) => sample.bands[band.id] ?? 0))]))
+    const priorBands = liveBands
+    const priorLevel = liveLevel
+    const priorRisk = liveRisk
+    liveBands = bandAverages
+    liveLevel = avgLevel
+    liveRisk = avgRisk
+    const result = scores()
+    liveBands = priorBands
+    liveLevel = priorLevel
+    liveRisk = priorRisk
+    return {
+      ...result,
+      rescue: clampScore((avgClarity * 0.44) + (avgNeighbor * 0.28) + ((100 - avgRisk) * 0.28)),
+      clarity: clampScore(avgClarity),
+      neighbor: clampScore(avgNeighbor),
+      risk: clampScore(avgRisk),
+    }
+  }
+
+  const bandLevel = (band: HeroBand) => {
+    if (!analyser || !frequencyData || !audioContext) return 0
+    const nyquist = audioContext.sampleRate / 2
+    const start = Math.max(0, Math.floor((band.low / nyquist) * frequencyData.length))
+    const end = Math.min(frequencyData.length - 1, Math.ceil((band.high / nyquist) * frequencyData.length))
+    if (end <= start) return 0
+    let total = 0
+    for (let index = start; index <= end; index += 1) total += frequencyData[index]
+    return clampScore((total / (end - start + 1)) / 255 * 100)
+  }
+
+  const readMicFrame = () => {
+    if (!analyser || !frequencyData || !timeData) return
+    analyser.getByteFrequencyData(frequencyData)
+    analyser.getByteTimeDomainData(timeData)
+    let sum = 0
+    let peak = 0
+    for (const value of timeData) {
+      const centered = Math.abs(value - 128)
+      sum += centered * centered
+      peak = Math.max(peak, centered)
+    }
+    const rms = Math.sqrt(sum / timeData.length)
+    liveLevel = clampScore(Math.max(rms * 1.65, peak * 0.78))
+    liveBands = Object.fromEntries(bands.map((band) => [band.id, bandLevel(band)]))
+    const result = scores()
+    if (diagnosticRunning) {
+      diagnosticSamples.push({
+        level: liveLevel,
+        risk: result.risk,
+        clarity: result.clarity,
+        neighbor: result.neighbor,
+        bands: { ...liveBands },
+      })
+    }
+    render()
+    animationFrame = window.requestAnimationFrame(readMicFrame)
+  }
+
+  const stopMic = async (status: typeof micStatus = 'stopped') => {
+    if (timer) window.clearInterval(timer)
+    timer = undefined
+    diagnosticRunning = false
+    if (animationFrame) window.cancelAnimationFrame(animationFrame)
+    animationFrame = undefined
+    stream?.getTracks().forEach((track) => track.stop())
+    stream = undefined
+    source?.disconnect()
+    source = undefined
+    analyser?.disconnect()
+    analyser = undefined
+    if (audioContext && audioContext.state !== 'closed') await audioContext.close().catch(() => undefined)
+    audioContext = undefined
+    frequencyData = undefined
+    timeData = undefined
+    micStatus = status
+    liveLevel = 0
+    liveBands = Object.fromEntries(bands.map((band) => [band.id, 0]))
+    if (runButton) runButton.disabled = false
+    if (countdownLabel && status === 'stopped') countdownLabel.textContent = 'Mic stopped. Enable Mic Check to run a real diagnostic.'
+    render()
+  }
+
+  const enableMic = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      micStatus = 'error'
+      if (countdownLabel) countdownLabel.textContent = 'Microphone is not supported in this browser.'
+      render()
+      return
+    }
+    if (micStatus === 'listening' || micStatus === 'waiting') return
+    micStatus = 'waiting'
+    render()
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!AudioContextClass) throw new Error('AudioContext is not supported.')
+      audioContext = new AudioContextClass()
+      analyser = audioContext.createAnalyser()
+      analyser.fftSize = 2048
+      analyser.smoothingTimeConstant = 0.82
+      source = audioContext.createMediaStreamSource(stream)
+      source.connect(analyser)
+      frequencyData = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>
+      timeData = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>
+      micStatus = 'listening'
+      if (countdownLabel) countdownLabel.textContent = 'Mic listening. Run the 10-second real diagnostic when ready.'
+      readMicFrame()
+    } catch (error) {
+      micStatus = (error instanceof DOMException && error.name === 'NotAllowedError') ? 'denied' : 'error'
+      if (countdownLabel) countdownLabel.textContent = micStatus === 'denied' ? 'Microphone permission denied.' : 'Could not start microphone.'
+      await stopMic(micStatus)
+    }
   }
 
   venueButtons.forEach((button) => button.addEventListener('click', () => applyPreset(button.dataset.venue ?? 'home')))
   controls.forEach((control) => control.addEventListener('input', render))
+  enableMicButton?.addEventListener('click', () => void enableMic())
+  stopMicButton?.addEventListener('click', () => void stopMic())
   runButton?.addEventListener('click', () => {
+    if (micStatus !== 'listening') {
+      if (countdownLabel) countdownLabel.textContent = 'Enable Mic Check first to run the real diagnostic.'
+      return
+    }
     if (timer) window.clearInterval(timer)
     countdown = 10
+    diagnosticSamples = []
+    diagnosticRunning = true
     runButton.disabled = true
     const report = root.querySelector<HTMLElement>('[data-report]')
     if (report) report.hidden = true
     if (progress) progress.style.width = '0%'
-    if (countdownLabel) countdownLabel.textContent = 'Running diagnostic simulation: 10 seconds left.'
+    if (countdownLabel) countdownLabel.textContent = 'Sampling live mic: 10 seconds left.'
     timer = window.setInterval(() => {
       countdown -= 1
       if (progress) progress.style.width = `${((10 - countdown) / 10) * 100}%`
-      if (countdownLabel) countdownLabel.textContent = countdown > 0 ? `Running diagnostic simulation: ${countdown} seconds left.` : 'Generating report card...'
+      if (countdownLabel) countdownLabel.textContent = countdown > 0 ? `Sampling live mic: ${countdown} seconds left.` : 'Generating report card from live samples...'
       if (countdown <= 0) {
         window.clearInterval(timer)
         timer = undefined
@@ -203,6 +439,11 @@ function bindKaraokeHeroDemo() {
     }, 1000)
   })
 
+  karaokeHeroCleanup = () => {
+    void stopMic()
+    if (timer) window.clearInterval(timer)
+  }
+  window.addEventListener('pagehide', karaokeHeroCleanup, { once: true })
   applyPreset(selectedVenue)
 }
 
@@ -261,9 +502,13 @@ function KaraokeHeroPublicPage(page: PublicPage) {
       </section>
       <section id="hero-demo" class="cinema-section hero-beta-section hero-demo-shell" data-hero-demo>
         <div class="section-head">
-          <p class="kicker">Interactive Public Demo</p>
-          <h2>Simulate a karaoke rescue check.</h2>
-          <p>Pick a venue, move the controls, and watch the score dashboard and Fix Coach update. This demo is deterministic and does not require microphone access.</p>
+          <p class="kicker">Interactive Public Beta</p>
+          <h2>Run a browser-local mic check.</h2>
+          <p>Enable the microphone to move the live level, spectrum, feedback risk, Fix Coach, and 10-second diagnostic. Simulated controls stay available when the mic is off.</p>
+        </div>
+        <div class="hero-live-note">
+          <strong>Privacy:</strong>
+          <span>Mic analysis runs locally in your browser. No audio is uploaded or saved.</span>
         </div>
         <div class="hero-score-grid" aria-label="Live score dashboard">
           <article class="hero-score-card"><span>Karaoke Rescue Score</span><strong data-score="rescue">--</strong><p data-score-label="rescue">Ready</p></article>
@@ -272,6 +517,44 @@ function KaraokeHeroPublicPage(page: PublicPage) {
           <article class="hero-score-card risk"><span>Feedback Risk</span><strong data-score="risk">--</strong><p data-score-label="risk">Ready</p></article>
         </div>
         <div class="hero-demo-grid">
+          <section class="hero-demo-panel hero-mic-panel">
+            <div class="hero-demo-panel-head">
+              <p class="kicker">Enable Mic Check</p>
+              <h3>Live input meter</h3>
+            </div>
+            <div class="hero-mic-status-grid">
+              <article><span>Status</span><strong data-mic-status>stopped</strong></article>
+              <article><span>Input level</span><strong><output data-mic-level>0</output>/100</strong></article>
+              <article><span>Signal</span><strong data-signal-label>silent</strong></article>
+            </div>
+            <div class="hero-level-meter" aria-label="Live input level"><span data-level-meter></span></div>
+            <p data-clipping-warning>No clipping warning.</p>
+            <p data-mic-coach>Enable Mic Check to see the live input level.</p>
+            <div class="hero-button-row">
+              <button class="primary-link hero-run-button" type="button" data-enable-mic>Enable Mic Check</button>
+              <button class="secondary-link hero-run-button" type="button" data-stop-mic disabled>Stop Mic</button>
+            </div>
+          </section>
+          <section class="hero-demo-panel hero-spectrum-panel">
+            <div class="hero-demo-panel-head">
+              <p class="kicker">Live Spectrum Bars</p>
+              <h3>Karaoke frequency bands</h3>
+            </div>
+            <div class="hero-spectrum-grid" data-spectrum-grid>
+              ${['Bass mud', 'Low mids', 'Vocal body', 'Presence', 'Harsh / feedback', 'Air / hiss'].map((label) => `
+                <article class="hero-spectrum-band">
+                  <div><strong>${label}</strong><span>Waiting for mic</span></div>
+                  <div class="hero-spectrum-meter"><span></span></div>
+                  <p>0 · quiet</p>
+                </article>
+              `).join('')}
+            </div>
+            <div class="hero-risk-detail">
+              <span>Suspected band</span>
+              <strong data-risk-band>Mic off</strong>
+              <p data-risk-action>Enable Mic Check to estimate feedback risk from live audio.</p>
+            </div>
+          </section>
           <section class="hero-demo-panel">
             <div class="hero-demo-panel-head">
               <p class="kicker">Pick Venue</p>
@@ -300,16 +583,17 @@ function KaraokeHeroPublicPage(page: PublicPage) {
               <p class="kicker">Fix Coach</p>
               <h3>Do this first</h3>
             </div>
+            <p class="hero-source-pill" data-coach-source>Simulated controls</p>
             <strong data-fix-primary>Pick a venue to begin.</strong>
             <p data-fix-why>The coach prioritizes one action from the current simulated setup.</p>
             <ul data-fix-backups></ul>
           </section>
           <section class="hero-demo-panel hero-diagnostic-panel" id="hero-check">
             <div class="hero-demo-panel-head">
-              <p class="kicker">10-Second Diagnostic Simulation</p>
-              <h3>No real mic required</h3>
+              <p class="kicker">10-Second Real Diagnostic</p>
+              <h3>Samples the live mic analyser</h3>
             </div>
-            <p>Run a simulated local check and generate a report card for the selected venue and controls.</p>
+            <p>Enable Mic Check, then sample live analyser levels for 10 seconds. No recording playback, no storage, no upload.</p>
             <div class="hero-progress" aria-label="Diagnostic progress"><span data-progress></span></div>
             <p class="hero-countdown" data-countdown>Ready to run.</p>
             <button class="primary-link hero-run-button" type="button" data-run-diagnostic>Run 10-Second Diagnostic</button>
@@ -350,12 +634,12 @@ function KaraokeHeroPublicPage(page: PublicPage) {
           <div>
             <p class="kicker">Start Hero Check</p>
             <h2>Public beta path.</h2>
-            <p>This public page is a validation entry point. The production-safe check uses simulated controls, a quick read, and one top fix.</p>
+            <p>This public page is a validation entry point. The beta check uses browser-local microphone analysis, simulated room controls, a quick read, and one top fix.</p>
           </div>
           <ol>
             <li>Pick the venue: home, church, barangay, wedding, or school.</li>
-            <li>Adjust the room controls.</li>
-            <li>Run the simulated quick check in the browser.</li>
+            <li>Enable Mic Check and watch the live level/spectrum.</li>
+            <li>Run the 10-second real diagnostic in the browser.</li>
             <li>Apply one fix before increasing volume.</li>
           </ol>
         </div>
@@ -367,7 +651,7 @@ function KaraokeHeroPublicPage(page: PublicPage) {
         </div>
         <div class="hero-beta-note">
           <h2>Privacy note.</h2>
-          <p>No audio is uploaded or recorded. This public demo does not store reports, collect emails, or send setup data to a backend.</p>
+          <p>Mic analysis runs locally in your browser. No audio is uploaded or saved. This public demo does not store reports, collect emails, or send setup data to a backend.</p>
         </div>
       </section>
       ${CTA('Make karaoke clearer first.', 'Try the public Hero beta flow before turning the room louder.', '#hero-check', 'Start Hero Check')}
